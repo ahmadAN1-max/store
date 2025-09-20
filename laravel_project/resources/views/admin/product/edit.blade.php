@@ -257,15 +257,14 @@
                                 </div>
                             </fieldset>
                             <fieldset class="name">
-                                <div class="body-title mb-10">Featured</div>
+                                <div class="body-title mb-10">Published</div>
                                 <div class="select mb-10">
-                                    <select class="" name="featured">
-                                        <option value="0" {{ $product->featured == '0' ? 'Selected' : '' }}>No
-                                        </option>
-                                        <option value="1" {{ $product->featured == '1' ? 'Selected' : '' }}>Yes
-                                        </option>
-                                    </select>
-                                </div>
+    <select name="featured">
+        <option value="0" {{ $product->featured == 0 ? 'selected' : '' }}>No</option>
+        <option value="1" {{ $product->featured == 1 ? 'selected' : '' }}>Yes</option>
+    </select>
+</div>
+
                             </fieldset>
 
 

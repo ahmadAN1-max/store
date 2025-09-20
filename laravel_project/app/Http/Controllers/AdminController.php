@@ -461,7 +461,90 @@ public function update_product(Request $request)
         abort(404, 'Parent product not found');
     }
 
-    // تحديث البيانات الأساسية + children كما عندك
+   if ($request->sizes) {
+        $sizes = array_map('trim', explode(',', $request->sizes));
+        $existingChildren = $product->children()->get()->keyBy('sizes');
+
+        foreach ($sizes as $size) {
+            if (isset($existingChildren[$size])) {
+                $child = $existingChildren[$size];
+                $child->regular_price = $request->regular_price;
+                $child->sale_price = $request->sale_price;
+                $child->barcode = $sizeBarcodes[$size] ?? $child->barcode;
+                $child->save();
+            } else {
+                $childProduct = new Product();
+                $childProduct->name = $request->name;
+                $childProduct->slug = Str::slug($request->name) . '-' . strtolower($size);
+                $childProduct->short_description = $request->short_description ?? '';
+                $childProduct->description = $request->description ?? '';
+                $childProduct->regular_price = $request->regular_price;
+                $childProduct->sale_price = $request->sale_price;
+                $childProduct->SKU = $request->SKU . '-' . strtoupper($size);
+                $childProduct->unit_cost = $request->unit_cost;
+                $childProduct->stock_status = $request->stock_status;
+                $childProduct->featured = $request->featured;
+                $childProduct->quantity = $request->quantity;
+                $childProduct->sizes = $size;
+                $childProduct->parent = false;
+                $childProduct->store = 'SP';
+                $childProduct->parent_id = $product->id;
+                $childProduct->brand_id = $request->brand_id;
+                $childProduct->image = $product->image;
+                $childProduct->images = $product->images;
+                $childProduct->barcode = $sizeBarcodes[$size] ?? null;
+                $childProduct->save();
+                $childProduct->categories()->sync($request->category_id);
+            }
+        }
+
+        foreach ($existingChildren as $size => $child) {
+            if (!in_array($size, $sizes) && $child->quantity === 0) {
+                $child->categories()->detach();
+                $child->delete();
+            }
+        }
+    }
+
+    if ($request->has('quantities')) {
+        $totalQuantity = 0;
+        foreach ($request->quantities as $childId => $quantity) {
+            $child = Product::find($childId);
+            if ($child && $child->parent_id == $product->id) {
+                $child->quantity = $quantity;
+                if ($request->has('barcodes') && isset($request->barcodes[$childId])) {
+                    $child->barcode = $request->barcodes[$childId];
+                }
+                $child->save();
+                $totalQuantity += $quantity;
+            }
+        }
+        $product->quantity = $totalQuantity;
+    }
+
+    // تحديث بيانات المنتج الأساسية
+    $product->name = $request->name;
+
+    // ✅ تعديل الجزء الخاص بالـ slug
+    $slug = $request->slug ?: Str::slug($request->name);
+    $originalSlug = $slug;
+    $counter = 1;
+    while (Product::where('slug', $slug)->where('id', '!=', $product->id)->exists()) {
+        $slug = $originalSlug . '-' . $counter++;
+    }
+    $product->slug = $slug;
+
+    $product->short_description = $request->short_description ?? ' ';
+    $product->description = $request->description ?? ' ';
+    $product->regular_price = $request->regular_price;
+    $product->sale_price = $request->sale_price;
+    $product->SKU = $request->SKU;
+    $product->stock_status = $request->stock_status;
+    $product->featured = $request->featured;
+    $product->store = 'SP';
+    $product->categories()->sync($request->category_id);
+    $product->brand_id = $request->brand_id;
+    
     // === تعديل المسارات للصور ===
     if ($request->hasFile('image')) {
         if ($product->image) {

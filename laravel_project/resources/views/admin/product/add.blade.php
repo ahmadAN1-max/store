@@ -232,7 +232,7 @@
                                 <span class="alert alert-danger text-center">{{ $message }}</span>
                             @enderror
                             <fieldset class="name">
-                                <div class="body-title mb-10">Featured</div>
+                                <div class="body-title mb-10">Published</div>
                                 <div class="select mb-10">
                                     <select class="" name="featured">
                                         <option value="0">No</option>

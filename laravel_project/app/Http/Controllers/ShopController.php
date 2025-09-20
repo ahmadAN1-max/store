@@ -13,7 +13,8 @@ class ShopController extends Controller
     {
         $productsQuery = Product::where('parent', true)
     ->whereNotNull('image')       // الصورة موجودة
-    ->where('image', '!=', '');   // الصورة مش فاضية
+    ->where('image', '!=', '')
+    ->where('featured', 1);   // الصورة مش فاضية
 
 
         if ($request->filled('category')) {
