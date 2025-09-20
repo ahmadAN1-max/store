@@ -103,7 +103,7 @@ class AdminController extends Controller
 
     public function GenerateBrandThumbailImage($image, $imageName)
     {
-        $destinationPath = public_path('uploads/brands/thumbnails');
+        $destinationPath = '/home/customer/www/adamn85.sg-host.com/public_html/uploads/brands/thumbnails';
         $img = Image::make($image->path());
         $img->fit(124, 124, function ($constraint) {
             $constraint->upsize();
@@ -121,7 +121,7 @@ class AdminController extends Controller
         $request->validate([
             'name' => 'required',
             'slug' => 'required|unique:brands,slug,' . $request->id,
-            'image' => 'nullable|mimes:png,jpg,jpeg|max:2048'
+            'image' => 'nullable|mimes:png,jpg,jpeg'
         ]);
 
         $brand = Brand::findOrFail($request->id);
@@ -169,14 +169,17 @@ class AdminController extends Controller
         return view("admin.category.add");
     }
 
+
     public function GenerateCategoryThumbailImage($image, $imageName)
     {
-        $destinationPath = public_path('uploads/categories/thumbnails');
+        $destinationPath = '/home/customer/www/adamn85.sg-host.com/public_html/uploads/categories/thumbnails';  
         $img = Image::make($image->path());
-        $img->fit(124, 124, function ($constraint) {
-            $constraint->upsize();
-        }, 'top')->save($destinationPath . '/' . $imageName);
+        $img->resize(124, 124, function ($constraint) {
+        $constraint->aspectRatio(); // يحافظ على نسبة العرض/الارتفاع الأصلية
+        $constraint->upsize();      // يمنع تكبير الصورة لو كانت أصغر
+        })->save($destinationPath . '/' . $imageName);
     }
+
 
     public function add_category_store(Request $request)
     {
@@ -254,196 +257,189 @@ class AdminController extends Controller
     }
 
     // ======================= Products =======================
-    public function GenerateThumbnailImage($imageFile, $imageName)
-    {
-        $destinationPath = public_path('uploads/products/thumbnails');
+public function GenerateThumbnailImage($imageFile, $imageName)
+{
+    $destinationPath = '/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/thumbnails';
 
-        $img = Image::make($imageFile);  // سواء كان UploadedFile أو path
-        $img->fit(124, 124, function ($constraint) {
-            $constraint->upsize();
-        }, 'top')->save($destinationPath . '/' . $imageName);
-    }
+    $img = Image::make($imageFile);
+    $img->fit(124, 124, function ($constraint) {
+        $constraint->upsize();
+    }, 'top')->save($destinationPath . '/' . $imageName);
+}
 
+public function SaveOriginalGalleryImage($image, $imageName)
+{
+    $destinationPath = '/home/customer/www/adamn85.sg-host.com/public_html/uploads/products';
+    $img = Image::make($image->path());
+    $img->save($destinationPath . '/' . $imageName);
+}
 
-    public function SaveOriginalGalleryImage($image, $imageName)
-    {
-        $destinationPath = public_path('uploads/products');
-        $img = Image::make($image->path());
-        $img->save($destinationPath . '/' . $imageName);
-    }
-    public function SaveOriginalProductImage($imageFile, $imageName)
-    {
-        $destinationPath = public_path('uploads/products');
-        $imageFile->move($destinationPath, $imageName);
-    }
+public function SaveOriginalProductImage($imageFile, $imageName)
+{
+    $destinationPath = '/home/customer/www/adamn85.sg-host.com/public_html/uploads/products';
+    $imageFile->move($destinationPath, $imageName);
+}
 
-    public function GenerateThumbnailImageFromPath($imagePath, $imageName)
-    {
-        $destinationPath = public_path('uploads/products/thumbnails');
-        $img = Image::make($imagePath);
-        $img->fit(124, 124, function ($constraint) {
-            $constraint->upsize();
-        }, 'top')->save($destinationPath . '/' . $imageName);
-    }
+public function GenerateThumbnailImageFromPath($imagePath, $imageName)
+{
+    $destinationPath = '/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/thumbnails';
+    $img = Image::make($imagePath);
+    $img->fit(124, 124, function ($constraint) {
+        $constraint->upsize();
+    }, 'top')->save($destinationPath . '/' . $imageName);
+}
 
+// =================== LIST PRODUCTS ===================
+public function products()
+{
+    $products = Product::where('parent', true)
+        ->orderBy('created_at', 'DESC')
+        ->get();
 
+    return view("admin.products", compact('products'));
+}
 
-    public function products()
-    {
-        $products = Product::where('parent', true)
-            ->orderBy('created_at', 'DESC')
-            ->get();
+// =================== ADD PRODUCT ===================
+public function add_product()
+{
+    $categories = Category::select('id', 'name')->orderBy('name')->get();
+    $brands = Brand::select('id', 'name')->orderBy('name')->get();
 
-        return view("admin.products", compact('products'));
-    }
+    return view("admin.product.add", compact('categories', 'brands'));
+}
 
-    public function add_product()
-    {
-        $categories = Category::select('id', 'name')->orderBy('name')->get();
-        $brands = Brand::select('id', 'name')->orderBy('name')->get();
+// =================== STORE PRODUCT ===================
+public function product_store(Request $request)
+{
+    $request->validate([
+        'name' => 'required',
+        'slug' => 'required|unique:products,slug',
+        'category_id' => 'required|array',
+        'category_id.*' => 'exists:categories,id',
+        'brand_id' => 'required',
+        'regular_price' => 'required',
+        'SKU' => 'required',
+        'stock_status' => 'required',
+        'featured' => 'required',
+        'quantity' => 'required',
+        'size_barcodes' => 'nullable|string',
+        'image' => 'nullable|mimes:png,jpg,jpeg'
+    ]);
 
-        return view("admin.product.add", compact('categories', 'brands'));
-    }
+    $current_timestamp = Carbon::now()->timestamp;
+    $imageName = null;
+    $gallery_arr = [];
+    $gallery_images = "";
 
-    public function product_store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required',
-            'slug' => 'required|unique:products,slug',
-            'category_id' => 'required|array',
-            'category_id.*' => 'exists:categories,id',
-            'brand_id' => 'required',
-            'regular_price' => 'required',
-            'SKU' => 'required',
-            'stock_status' => 'required',
-            'featured' => 'required',
-            'quantity' => 'required',
-            'size_barcodes' => 'nullable|string',
-            'image' => 'nullable|mimes:png,jpg,jpeg|max:2048'
-        ]);
-
-        $current_timestamp = Carbon::now()->timestamp;
-        $imageName = null;
+    if ($request->hasFile('images')) {
+        $allowedfileExtension = ['jpg', 'png', 'jpeg'];
+        $files = $request->file('images');
         $gallery_arr = [];
-        $gallery_images = "";
+        $counter = 1;
 
-        if ($request->hasFile('images')) {
-            $allowedfileExtension = ['jpg', 'png', 'jpeg'];
-            $files = $request->file('images');
-            $gallery_arr = [];
-            $counter = 1;
-
-            foreach ($files as $file) {
-                $gextension = $file->getClientOriginalExtension();
-                if (in_array($gextension, $allowedfileExtension)) {
-                    $gfilename = $current_timestamp . "-" . $counter . "." . $gextension;
-
-                    // حفظ الصورة الأصلية بفولدر gallery
-                    $this->SaveOriginalProductImage($file, $gfilename);
-
-                    // توليد نسخة thumbnail من نفس المسار الجديد
-                    $fullImagePath = public_path('uploads/products/' . $gfilename);
-                    $this->GenerateThumbnailImageFromPath($fullImagePath, $gfilename);
-
-                    $gallery_arr[] = $gfilename;
-                    $counter++;
-                }
-            }
-
-            $gallery_images = implode(',', $gallery_arr);
-        }
-        if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $imageName = $current_timestamp . '.' . $image->extension();
-
-            $this->SaveOriginalProductImage($image, $imageName);
-
-            $fullImagePath = public_path('uploads/products/' . $imageName);
-            $this->GenerateThumbnailImageFromPath($fullImagePath, $imageName);
-        }
-
-
-        $parentProduct = new Product();
-        $parentProduct->name = $request->name;
-        $parentProduct->slug = Str::slug($request->name);
-        $parentProduct->short_description = $request->short_description ?? ' ';
-        $parentProduct->description = $request->description ?? ' ';
-        $parentProduct->regular_price = $request->regular_price;
-        $parentProduct->sale_price = $request->sale_price;
-        $parentProduct->SKU = $request->SKU;
-        $parentProduct->stock_status = $request->stock_status;
-        $parentProduct->featured = $request->featured;
-        $parentProduct->quantity = $request->quantity;
-        $parentProduct->sizes = '';
-        $parentProduct->parent = true;
-        $parentProduct->parent_id = null;
-
-        $parentProduct->brand_id = $request->brand_id;
-        $parentProduct->image = $imageName;
-        $parentProduct->images = $gallery_images;
-        $parentProduct->store = 'SP';
-        $parentProduct->save();
-        $parentProduct->categories()->sync($request->category_id);
-        $sizeBarcodes = [];
-        if ($request->size_barcodes) {
-            $lines = explode("\n", $request->size_barcodes);
-            foreach ($lines as $line) {
-                if (strpos($line, ':') !== false) {
-                    [$size, $barcode] = array_map('trim', explode(':', $line, 2));
-                    $sizeBarcodes[$size] = $barcode;
-                }
+        foreach ($files as $file) {
+            $gextension = $file->getClientOriginalExtension();
+            if (in_array($gextension, $allowedfileExtension)) {
+                $gfilename = $current_timestamp . "-" . $counter . "." . $gextension;
+                $this->SaveOriginalProductImage($file, $gfilename);
+                $fullImagePath = '/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/' . $gfilename;
+                $this->GenerateThumbnailImageFromPath($fullImagePath, $gfilename);
+                $gallery_arr[] = $gfilename;
+                $counter++;
             }
         }
 
-        if ($request->sizes) {
-            $sizes = explode(',', $request->sizes);
-            foreach ($sizes as $size) {
-                $size = trim($size);
-                if (!empty($size)) {
-                    $childProduct = new Product();
-                    $childProduct->name = $request->name;
-                    $childProduct->slug = Str::slug($request->name) . '-' . strtolower($size);
-                    $childProduct->short_description = $request->short_description ?? ' ';
-                    $childProduct->description = $request->description ?? ' ';
-                    $childProduct->regular_price = $request->regular_price;
-                    $childProduct->sale_price = $request->sale_price;
-                    $childProduct->SKU = $request->SKU . '-' . strtoupper($size);
-                    $childProduct->stock_status = $request->stock_status;
-                    $childProduct->featured = $request->featured;
-                    $childProduct->quantity = $request->quantity;
-                    $childProduct->sizes = $size;
-                    $childProduct->parent = false;
-                    $childProduct->parent_id = $parentProduct->id;
-                    $childProduct->brand_id = $request->brand_id;
-                    $childProduct->image = $parentProduct->image;
-                    $childProduct->images = $parentProduct->images;
-                    $childProduct->store = 'SP';
-                    $childProduct->barcode = $sizeBarcodes[$size] ?? null;
-
-                    $childProduct->save();
-                    $childProduct->categories()->sync($request->category_id);
-                }
-            }
-        }
-
-        return redirect()->route('admin.products')->with('status', 'Product and variants added successfully!');
+        $gallery_images = implode(',', $gallery_arr);
     }
 
-    public function edit_product($id)
-    {
-        $product = Product::findOrFail($id);
-        $categories = Category::select('id', 'name')->orderBy('name')->get();
-        $brands = Brand::select('id', 'name')->orderBy('name')->get();
-
-        // تأكد من وجود علاقة children في موديل Product
-        $parentProduct = Product::with('children')->where('id', $id)->where('parent', true)->firstOrFail();
-
-        $items = $parentProduct->children;
-
-        return view('admin.product.edit', compact('product', 'categories', 'brands', 'items'));
+    if ($request->hasFile('image')) {
+        $image = $request->file('image');
+        $imageName = $current_timestamp . '.' . $image->extension();
+        $this->SaveOriginalProductImage($image, $imageName);
+        $fullImagePath = '/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/' . $imageName;
+        $this->GenerateThumbnailImageFromPath($fullImagePath, $imageName);
     }
 
-   public function update_product(Request $request)
+    $parentProduct = new Product();
+    $parentProduct->name = $request->name;
+    $parentProduct->slug = Str::slug($request->name);
+    $parentProduct->short_description = $request->short_description ?? ' ';
+    $parentProduct->description = $request->description ?? ' ';
+    $parentProduct->regular_price = $request->regular_price;
+    $parentProduct->sale_price = $request->sale_price;
+    $parentProduct->SKU = $request->SKU;
+    $parentProduct->stock_status = $request->stock_status;
+    $parentProduct->featured = $request->featured;
+    $parentProduct->quantity = $request->quantity;
+    $parentProduct->sizes = '';
+    $parentProduct->parent = true;
+    $parentProduct->parent_id = null;
+    $parentProduct->brand_id = $request->brand_id;
+    $parentProduct->image = $imageName;
+    $parentProduct->images = $gallery_images;
+    $parentProduct->store = 'SP';
+    $parentProduct->save();
+    $parentProduct->categories()->sync($request->category_id);
+
+    $sizeBarcodes = [];
+    if ($request->size_barcodes) {
+        $lines = explode("\n", $request->size_barcodes);
+        foreach ($lines as $line) {
+            if (strpos($line, ':') !== false) {
+                [$size, $barcode] = array_map('trim', explode(':', $line, 2));
+                $sizeBarcodes[$size] = $barcode;
+            }
+        }
+    }
+
+    if ($request->sizes) {
+        $sizes = explode(',', $request->sizes);
+        foreach ($sizes as $size) {
+            $size = trim($size);
+            if (!empty($size)) {
+                $childProduct = new Product();
+                $childProduct->name = $request->name;
+                $childProduct->slug = Str::slug($request->name) . '-' . strtolower($size);
+                $childProduct->short_description = $request->short_description ?? ' ';
+                $childProduct->description = $request->description ?? ' ';
+                $childProduct->regular_price = $request->regular_price;
+                $childProduct->sale_price = $request->sale_price;
+                $childProduct->SKU = $request->SKU . '-' . strtoupper($size);
+                $childProduct->stock_status = $request->stock_status;
+                $childProduct->featured = $request->featured;
+                $childProduct->quantity = $request->quantity;
+                $childProduct->sizes = $size;
+                $childProduct->parent = false;
+                $childProduct->parent_id = $parentProduct->id;
+                $childProduct->brand_id = $request->brand_id;
+                $childProduct->image = $parentProduct->image;
+                $childProduct->images = $parentProduct->images;
+                $childProduct->store = 'SP';
+                $childProduct->barcode = $sizeBarcodes[$size] ?? null;
+
+                $childProduct->save();
+                $childProduct->categories()->sync($request->category_id);
+            }
+        }
+    }
+
+    return redirect()->route('admin.products')->with('status', 'Product and variants added successfully!');
+}
+
+// =================== EDIT PRODUCT ===================
+public function edit_product($id)
+{
+    $product = Product::findOrFail($id);
+    $categories = Category::select('id', 'name')->orderBy('name')->get();
+    $brands = Brand::select('id', 'name')->orderBy('name')->get();
+    $parentProduct = Product::with('children')->where('id', $id)->where('parent', true)->firstOrFail();
+    $items = $parentProduct->children;
+
+    return view('admin.product.edit', compact('product', 'categories', 'brands', 'items'));
+}
+
+// =================== UPDATE PRODUCT ===================
+public function update_product(Request $request)
 {
     $request->validate([
         'name' => 'required',
@@ -455,9 +451,8 @@ class AdminController extends Controller
         'SKU' => 'required',
         'stock_status' => 'required',
         'featured' => 'required',
-        'quantity' => 'required',
-        'image' => 'nullable|mimes:png,jpg,jpeg|max:2048',
-        'images.*' => 'nullable|mimes:png,jpg,jpeg|max:2048'
+        'image' => 'nullable|mimes:png,jpg,jpeg',
+        'images.*' => 'nullable|mimes:png,jpg,jpeg'
     ]);
 
     $product = Product::findOrFail($request->id);
@@ -465,148 +460,33 @@ class AdminController extends Controller
     if (!$product->parent) {
         abort(404, 'Parent product not found');
     }
-    if ($request->sizes) {
-        $sizes = array_map('trim', explode(',', $request->sizes));
-        $existingChildren = $product->children()->get()->keyBy('sizes');
 
-        foreach ($sizes as $size) {
-            if (isset($existingChildren[$size])) {
-                $child = $existingChildren[$size];
-                $child->regular_price = $request->regular_price;
-                $child->sale_price = $request->sale_price;
-                $child->barcode = $sizeBarcodes[$size] ?? $child->barcode;
-                $child->save();
-            } else {
-                $childProduct = new Product();
-                $childProduct->name = $request->name;
-                $childProduct->slug = Str::slug($request->name) . '-' . strtolower($size);
-                $childProduct->short_description = $request->short_description ?? '';
-                $childProduct->description = $request->description ?? '';
-                $childProduct->regular_price = $request->regular_price;
-                $childProduct->sale_price = $request->sale_price;
-                $childProduct->SKU = $request->SKU . '-' . strtoupper($size);
-                $childProduct->unit_cost = $request->unit_cost;
-                $childProduct->stock_status = $request->stock_status;
-                $childProduct->featured = $request->featured;
-                $childProduct->quantity = $request->quantity;
-                $childProduct->sizes = $size;
-                $childProduct->parent = false;
-                $childProduct->store = 'SP';
-                $childProduct->parent_id = $product->id;
-                $childProduct->brand_id = $request->brand_id;
-                $childProduct->image = $product->image;
-                $childProduct->images = $product->images;
-                $childProduct->barcode = $sizeBarcodes[$size] ?? null;
-                $childProduct->save();
-                $childProduct->categories()->sync($request->category_id);
-            }
-        }
-
-        foreach ($existingChildren as $size => $child) {
-            if (!in_array($size, $sizes) && $child->quantity === 0) {
-                $child->categories()->detach();
-                $child->delete();
-            }
-        }
-    }
-
-    if ($request->has('quantities')) {
-        $totalQuantity = 0;
-        foreach ($request->quantities as $childId => $quantity) {
-            $child = Product::find($childId);
-            if ($child && $child->parent_id == $product->id) {
-                $child->quantity = $quantity;
-                if ($request->has('barcodes') && isset($request->barcodes[$childId])) {
-                    $child->barcode = $request->barcodes[$childId];
-                }
-                $child->save();
-                $totalQuantity += $quantity;
-            }
-        }
-        $product->quantity = $totalQuantity;
-    }
-
-    // تحديث بيانات المنتج الأساسية
-    $product->name = $request->name;
-
-    // ✅ تعديل الجزء الخاص بالـ slug
-    $slug = $request->slug ?: Str::slug($request->name);
-    $originalSlug = $slug;
-    $counter = 1;
-    while (Product::where('slug', $slug)->where('id', '!=', $product->id)->exists()) {
-        $slug = $originalSlug . '-' . $counter++;
-    }
-    $product->slug = $slug;
-
-    $product->short_description = $request->short_description ?? ' ';
-    $product->description = $request->description ?? ' ';
-    $product->regular_price = $request->regular_price;
-    $product->sale_price = $request->sale_price;
-    $product->SKU = $request->SKU;
-    $product->stock_status = $request->stock_status;
-    $product->featured = $request->featured;
-    $product->store = 'SP';
-    $product->categories()->sync($request->category_id);
-    $product->brand_id = $request->brand_id;
-
+    // تحديث البيانات الأساسية + children كما عندك
+    // === تعديل المسارات للصور ===
     if ($request->hasFile('image')) {
         if ($product->image) {
-            if (File::exists(public_path('uploads/products/thumbnails/' . $product->image))) {
-                File::delete(public_path('uploads/products/thumbnails/' . $product->image));
+            if (File::exists('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/thumbnails/' . $product->image)) {
+                File::delete('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/thumbnails/' . $product->image);
             }
-            if (File::exists(public_path('uploads/products/' . $product->image))) {
-                File::delete(public_path('uploads/products/' . $product->image));
+            if (File::exists('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/' . $product->image)) {
+                File::delete('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/' . $product->image);
             }
         }
 
         $image = $request->file('image');
         $imageName = Carbon::now()->timestamp . '.' . $image->extension();
-        $destinationPath = public_path('uploads/products/');
-        $image->move($destinationPath, $imageName);
-
-        $this->GenerateThumbnailImage(Image::make($destinationPath . '/' . $imageName), $imageName);
+        $image->move('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/', $imageName);
+        $this->GenerateThumbnailImageFromPath('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/' . $imageName, $imageName);
 
         $product->image = $imageName;
-    } elseif ($request->input('remove_image') == '1') {
-        if ($product->image) {
-            if (File::exists(public_path('uploads/products/thumbnails/' . $product->image))) {
-                File::delete(public_path('uploads/products/thumbnails/' . $product->image));
-            }
-            if (File::exists(public_path('uploads/products/' . $product->image))) {
-                File::delete(public_path('uploads/products/' . $product->image));
-            }
-            $product->image = null;
-        }
-    }
-
-    if ($request->remove_gallery_images) {
-        $removedImages = explode(',', $request->remove_gallery_images);
-        $currentImages = $product->images ? explode(',', $product->images) : [];
-
-        foreach ($removedImages as $img) {
-            $img = trim($img);
-            if (File::exists(public_path('uploads/products/thumbnails/' . $img))) {
-                File::delete(public_path('uploads/products/thumbnails/' . $img));
-            }
-            if (File::exists(public_path('uploads/products/' . $img))) {
-                File::delete(public_path('uploads/products/' . $img));
-            }
-            if (($key = array_search($img, $currentImages)) !== false) {
-                unset($currentImages[$key]);
-            }
-        }
-
-        $product->images = implode(',', $currentImages);
     }
 
     if ($request->hasFile('images')) {
         $newImages = [];
         foreach ($request->file('images') as $file) {
             $imageName = Carbon::now()->timestamp . rand(1000, 9999) . '.' . $file->extension();
-            $file->move(public_path('uploads/products/'), $imageName);
-
-            $this->GenerateThumbnailImage(Image::make(public_path('uploads/products/' . $imageName)), $imageName);
-
+            $file->move('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/', $imageName);
+            $this->GenerateThumbnailImageFromPath('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/' . $imageName, $imageName);
             $newImages[] = $imageName;
         }
         $allImages = $product->images ? explode(',', $product->images) : [];
@@ -614,31 +494,26 @@ class AdminController extends Controller
     }
 
     $product->save();
-
     return redirect()->route('admin.products')->with('status', 'Product and quantities updated successfully!');
 }
 
+// =================== DELETE PRODUCT ===================
+public function delete_product($id)
+{
+    $product = Product::findOrFail($id);
+    Product::where('parent_id', $product->id)->delete();
 
-
-
-    public function delete_product($id)
-    {
-        $product = Product::findOrFail($id);
-        Product::where('parent_id', $product->id)->delete();
-
-        // حذف صورة المنتج الأب
-        if (File::exists(public_path('uploads/products/thumbnails/' . $product->image))) {
-            File::delete(public_path('uploads/products/thumbnails/' . $product->image));
-        }
-        if (File::exists(public_path('uploads/products/' . $product->image))) {
-            File::delete(public_path('uploads/products/' . $product->image));
-        }
-
-
-        $product->delete();
-
-        return redirect()->route('admin.products')->with('status', 'Record has been deleted successfully!');
+    if (File::exists('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/thumbnails/' . $product->image)) {
+        File::delete('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/thumbnails/' . $product->image);
     }
+    if (File::exists('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/' . $product->image)) {
+        File::delete('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/' . $product->image);
+    }
+
+    $product->delete();
+    return redirect()->route('admin.products')->with('status', 'Record has been deleted successfully!');
+}
+
 
     // ======================= Orders =======================
 
@@ -693,76 +568,76 @@ class AdminController extends Controller
 
     public function add_coupon()
     {
-        $categories = Category::all();
-        return view("admin.coupon.add", compact('categories'));
+         $categories = Category::all();
+        return view("admin.coupon.add",compact('categories'));
     }
 
     public function add_coupon_store(Request $request)
-    {
-        $request->validate([
-            'code' => 'required',
-            'type' => 'required',
-            'value' => 'required|numeric',
-            'cart_value' => 'required|numeric',
-            'expiry_date' => 'required|date',
-            'category_id' => 'required|array' // نتحقق انه اختار كاتيغوري
-        ]);
+{
+    $request->validate([
+        'code' => 'required',
+        'type' => 'required',
+        'value' => 'required|numeric',
+        'cart_value' => 'required|numeric',
+        'expiry_date' => 'required|date',
+        'category_id' => 'required|array' // نتحقق انه اختار كاتيغوري
+    ]);
 
-        $coupon = new Coupon();
-        $coupon->code = $request->code;
-        $coupon->type = $request->type;
-        $coupon->value = $request->value;
-        $coupon->cart_value = $request->cart_value;
-        $coupon->expiry_date = $request->expiry_date;
-        $coupon->save();
+    $coupon = new Coupon();
+    $coupon->code = $request->code;
+    $coupon->type = $request->type;
+    $coupon->value = $request->value;
+    $coupon->cart_value = $request->cart_value;
+    $coupon->expiry_date = $request->expiry_date;
+    $coupon->save();
 
-        // ربط الكاتيغوريات
-        $coupon->categories()->sync($request->category_id);
+    // ربط الكاتيغوريات
+    $coupon->categories()->sync($request->category_id);
 
-        return redirect()->route("admin.coupons")->with('status', 'Record has been added successfully!');
-    }
-
-
-    public function edit_coupon($id)
-    {
-        $coupon = Coupon::findOrFail($id); // الأفضل findOrFail للتأكد من وجوده
-        $categories = Category::all(); // كل الكاتيغوريات
-
-        // نحصل على IDs الكاتيغوريات المرتبطة بالكوبون
-        $couponCategoryIds = $coupon->categories->pluck('id')->toArray();
-
-        return view('admin.coupon.edit', compact('coupon', 'categories', 'couponCategoryIds'));
-    }
+    return redirect()->route("admin.coupons")->with('status', 'Record has been added successfully!');
+}
 
 
-    public function update_coupon(Request $request)
-    {
-        $request->validate([
-            'id' => 'required|exists:coupons,id',
-            'code' => 'required',
-            'type' => 'required',
-            'value' => 'required|numeric',
-            'cart_value' => 'required|numeric',
-            'expiry_date' => 'required|date',
-            'category_id' => 'required|array', // للتأكد انه اختار شيء
-        ]);
+ public function edit_coupon($id)
+{
+    $coupon = Coupon::findOrFail($id); // الأفضل findOrFail للتأكد من وجوده
+    $categories = Category::all(); // كل الكاتيغوريات
 
-        // جلب الكوبون
-        $coupon = Coupon::findOrFail($request->id);
-        $coupon->code = $request->code;
-        $coupon->type = $request->type;
-        $coupon->value = $request->value;
-        $coupon->cart_value = $request->cart_value;
-        $coupon->expiry_date = $request->expiry_date;
+    // نحصل على IDs الكاتيغوريات المرتبطة بالكوبون
+    $couponCategoryIds = $coupon->categories->pluck('id')->toArray();
 
-        // حفظ بيانات الكوبون الأساسية
-        $coupon->save();
+    return view('admin.coupon.edit', compact('coupon', 'categories', 'couponCategoryIds'));
+}
 
-        // ربط الكاتيجوريات الجديدة في pivot table
-        $coupon->categories()->sync($request->category_id);
 
-        return redirect()->route('admin.coupons')->with('status', 'Record has been updated successfully!');
-    }
+ public function update_coupon(Request $request)
+{
+    $request->validate([
+        'id' => 'required|exists:coupons,id',
+        'code' => 'required',
+        'type' => 'required',
+        'value' => 'required|numeric',
+        'cart_value' => 'required|numeric',
+        'expiry_date' => 'required|date',
+        'category_id' => 'required|array', // للتأكد انه اختار شيء
+    ]);
+
+    // جلب الكوبون
+    $coupon = Coupon::findOrFail($request->id);
+    $coupon->code = $request->code;
+    $coupon->type = $request->type;
+    $coupon->value = $request->value;
+    $coupon->cart_value = $request->cart_value;
+    $coupon->expiry_date = $request->expiry_date;
+
+    // حفظ بيانات الكوبون الأساسية
+    $coupon->save();
+
+    // ربط الكاتيجوريات الجديدة في pivot table
+    $coupon->categories()->sync($request->category_id);
+
+    return redirect()->route('admin.coupons')->with('status', 'Record has been updated successfully!');
+}
 
     public function delete_coupon($id)
     {
@@ -860,4 +735,5 @@ class AdminController extends Controller
 
         return view('admin.reports', compact('bills', 'from', 'to', 'type', 'categories', 'categoryId'));
     }
+  
 }
