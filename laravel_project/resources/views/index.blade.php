@@ -316,6 +316,7 @@
 
             <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
 
+            {{-- featured products ....
             <section class="products-grid container">
                 <h2 class="section-title text-center mb-3 pb-xl-3 mb-xl-4">Featured Products</h2>
 
@@ -366,7 +367,7 @@
                         </div>
                     @endforeach
                 </div><!-- /.row -->
-            </section>
+            </section> --}}
         </div>
 
         <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>

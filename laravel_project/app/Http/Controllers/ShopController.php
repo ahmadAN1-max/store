@@ -80,7 +80,8 @@ class ShopController extends Controller
     {
    $productsQuery = Product::where('parent', true)
     ->whereNotNull('image')       // الصورة موجودة
-    ->where('image', '!=', '')    // الصورة مش فاضية
+    ->where('image', '!=', '') 
+    ->where('featured', 1)   
     ->whereHas('categories', function ($q) use ($name) {
         $q->where('name', $name);
     });
@@ -102,6 +103,7 @@ public function search(Request $request)
     $keyword = $request->input('search-keyword');
 
 $products = Product::where('parent', 1)
+->where('featured', 1)
     ->whereNotNull('image')        // الصورة موجودة
     ->where('image', '!=', '')     // الصورة مش فاضية
     ->where(function($query) use ($keyword) {
