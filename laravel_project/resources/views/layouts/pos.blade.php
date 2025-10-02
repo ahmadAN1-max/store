@@ -132,7 +132,15 @@
                                         </a>
                                     </li>
                                 @endif
-
+                                @if (!$admin)
+                                    <li class="menu-item">
+                                        
+                                        <a href="{{ route('pos.products') }}" class="">
+                                        <div class="icon"><i class="icon-shopping-cart"></i></div>
+                                            <div class="text">Products</div>
+                                        </a>
+                                    </li>
+                                @endif
                                 <li class="menu-item">
                                     <a href="{{ route('pos.customers') }}" class="">
                                         <div class="icon"><i class="icon-users"></i></div>

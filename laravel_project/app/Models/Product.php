@@ -22,6 +22,7 @@ class Product extends Model
         'description',
         'barcode',
         'parent',
+        'store',
     ];
 
     public function categories()

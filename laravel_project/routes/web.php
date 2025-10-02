@@ -70,7 +70,7 @@ Route::middleware(['auth.role:ADM'])->group(function () {
 Route::get('/search', [ShopController::class, 'search'])->name('product.search');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/shop/{product_slug}', [ShopController::class, 'product_details'])->name("shop.product.details");
-Route::get('/shop/category/{name}', [ShopController::class, 'categoryProducts'])->name('shop.byCategoryName');
+Route::get('/shop/category/{slug}', [ShopController::class, 'categoryProducts'])->name('shop.byCategorySlug');
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 //Route::post('/cart/store', [CartController::class, 'addToCart'])->name('cart.store');
 Route::put('/cart/increase-qunatity/{rowId}', [CartController::class, 'increase_item_quantity'])->name('cart.increase.qty');

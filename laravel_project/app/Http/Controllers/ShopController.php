@@ -76,28 +76,30 @@ class ShopController extends Controller
         return view('details', compact("product", "rproducts", "sizes"));
     }
 
-    public function categoryProducts($name, Request $request)
-    {
-        $productsQuery = Product::where('parent', true)
-        ->whereNotNull('image')       // الصورة موجودة
-        ->where('image', '!=', '') 
-        ->where('featured', 1)   
-        ->whereHas('categories', function ($q) use ($name) {
-    $q->where('slug', $name);
-});
+    public function categoryProducts($slug, Request $request)
+{
+    $productsQuery = Product::where('parent', true)
+        ->whereNotNull('image')
+        ->where('image', '!=', '')
+        ->where('featured', 1)
+        ->whereHas('categories', function ($q) use ($slug) {
+            $q->where('slug', $slug);
+        });
 
-    
-        if ($request->boolean('exclusive')) {
-            $productsQuery->whereHas('categories', function ($q) {
-                $q->where('name', 'Exclusive Website')
-                    ->orWhere('name', 'like', 'Exclusive %');
-            });
-        }
-
-        $products = $productsQuery->paginate(12);
-
-        return view('shop', compact('products', 'name'));
+    if ($request->boolean('exclusive')) {
+        $productsQuery->whereHas('categories', function ($q) {
+            $q->where('name', 'Exclusive Website')
+              ->orWhere('name', 'like', 'Exclusive %');
+        });
     }
+
+    // لو حابب تعرض اسم الكاتيجوري في الصفحة
+    $category = \App\Models\Category::where('slug', $slug)->firstOrFail();
+
+    $products = $productsQuery->paginate(12);
+
+    return view('shop', compact('products', 'category'));
+}
 
     public function search(Request $request)
     {

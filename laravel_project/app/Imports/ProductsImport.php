@@ -66,7 +66,7 @@ class ProductsImport implements ToModel, WithHeadingRow
                 'featured'          => $row['featured'] ?? 0,
                 'quantity'          => 0, // يُحدّث بعد إنشاء الأطفال
                 'sizes'             => '',
-                'store'             => $row['store'] ?? '',
+                'store'             => $row['store'] ?? 'SP',
                 'parent'            => 1,
                 'parent_id'         => null,
                 'brand_id'          => $brand ? $brand->id : null,
@@ -126,7 +126,7 @@ class ProductsImport implements ToModel, WithHeadingRow
                         'sizes'             => $size,
                         'parent'            => 0,
                         'parent_id'         => $parentProduct->id,
-                        'store'             => $row['store'] ?? '',
+                        'store'             => $row['store'] ?? 'SP',
                         'brand_id'          => $brand ? $brand->id : null,
                         'barcode'           => $childBarcode ?? '',
                     ]);

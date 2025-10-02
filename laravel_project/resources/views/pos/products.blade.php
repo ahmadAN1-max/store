@@ -46,8 +46,10 @@
                                 </div>
                             </form>
                         </div>
+                        @if ($admin)
                         <a class="tf-button style-1 w208" href="{{ route('pos.product-add') }}"><i class="icon-plus"></i>Add
                             new</a>
+                            @endif
                     </div>
                     <div class="table-responsive">
                         <table class="table table-striped table-bordered" style="table-layout: auto; width: 100%;">
@@ -57,9 +59,10 @@
                                     <th>Price</th>
                                     <th>SKU</th>
                                     <th>Sizes</th>
-                                    <th>Stock</th>
                                     <th>Quantity</th>
+                                    @if ($admin)
                                     <th>Action</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
@@ -104,8 +107,9 @@
                                             @endforeach
                                         </td>
 
-                                        <td style="white-space: nowrap;">{{ $product->stock_status }}</td>
+                              
                                         <td style="white-space: nowrap;">{{ $product->quantity }}</td>
+                                        @if ($admin)
                                         <td style="white-space: nowrap;">
                                             <div class="list-icon-function">
                                                 <a href="{{ route('pos.product-edit', ['id' => $product->id]) }}">
@@ -123,6 +127,7 @@
                                                 </form>
                                             </div>
                                         </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                                

@@ -1,3 +1,6 @@
+<?
+use Illuminate\Support\Str;
+?>
 @extends('layouts.app')
 
 @section('content')
@@ -32,7 +35,7 @@
                             <h2 class="h1 fw-normal mb-0 animate animate_fade animate_btt animate_delay-5">Fall-Winter
                             </h2>
                             <h2 class="h1 fw-bold animate animate_fade animate_btt animate_delay-5">2025/2026</h2>
-                            <a href="{{ route('shop.byCategoryName', ['name' => 'new collection']) }}"
+                            <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('new-collection')]) }}"
                                 class="btn-link btn-link_lg default-underline fw-medium animate animate_fade animate_btt animate_delay-7">Shop
                                 Now</a>
                         </div>
@@ -54,11 +57,15 @@
                             <h2 class="h1 fw-normal mb-0 animate animate_fade animate_btt animate_delay-5">First Moments
                                 Collection </h2>
                             <h2 class="h1 fw-bold animate animate_fade animate_btt animate_delay-5">Newborn Essentials </h2>
-                            <a href="{{ route('shop.byCategoryName', ['name' => 'NewBorn Boy (0-0 -->6-9)']) }}"
-                               style="color:blue;" class="btn-link btn-link_lg default-underline fw-medium animate animate_fade animate_btt animate_delay-7">Shop Now - Little Prince</a>
-                                <p>     </p>
-                                 <a href="{{ route('shop.byCategoryName', ['name' => 'NewBorn Girl (0-0 -->6-9)']) }}"
-                               style="color:#ff69b4" class="btn-link btn-link_lg default-underline fw-medium animate animate_fade animate_btt animate_delay-7">Shop Now - Little Princess</a>
+                            <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('NewBorn Boy (0-0 -->6-9)')]) }}"
+                                style="color:blue;"
+                                class="btn-link btn-link_lg default-underline fw-medium animate animate_fade animate_btt animate_delay-7">Shop
+                                Now - Little Prince</a>
+                            <p> </p>
+                            <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('NewBorn Girl (0-0 -->6-9)')]) }}"
+                                style="color:#ff69b4"
+                                class="btn-link btn-link_lg default-underline fw-medium animate animate_fade animate_btt animate_delay-7">Shop
+                                Now - Little Princess</a>
 
                         </div>
                     </div>
@@ -78,7 +85,7 @@
                             <h2 class="h1 fw-normal mb-0 animate animate_fade animate_btt animate_delay-5">Limited to Our
                             </h2>
                             <h2 class="h1 fw-bold animate animate_fade animate_btt animate_delay-5">Website</h2>
-                            <a href="{{ route('shop.byCategoryName', ['name' => 'Exclusive Website']) }}"
+                            <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Exclusive Website')]) }}"
                                 class="btn-link btn-link_lg default-underline fw-medium animate animate_fade animate_btt animate_delay-7">Shop
                                 Now</a>
                         </div>
@@ -92,7 +99,7 @@
                 </div>
             </div>
         </section>
-               <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
+        <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
         <div class="container mw-1620 bg-white border-radius-10">
             <section class="category-carousel container">
                 <h2 class="section-title text-center mb-3 pb-xl-2 mb-xl-4">Explore by Category</h2>
@@ -139,12 +146,12 @@
                         <div class="swiper-wrapper">
                             @foreach ($categories as $category)
                                 <div class="swiper-slide">
-                                    <a href="{{ route('shop.byCategoryName', $category->slug) }}">
+                                    <a href="{{ route('shop.byCategorySlug', $category->slug) }}">
                                         <img loading="lazy" class="w-100 h-auto mb-3"
                                             src="{{ asset('uploads/categories/thumbnails/' . $category->image) }}"
                                             width="124" height="124" alt="" style=" border-radius: 50%;" /></a>
                                     <div class="text-center">
-                                        <a href="{{ route('shop.byCategoryName', $category->slug) }}"
+                                        <a href="{{ route('shop.byCategorySlug', $category->slug) }}"
                                             class="menu-link fw-medium">{{ $category->name }}</a>
                                     </div>
                                 </div>
@@ -180,7 +187,7 @@
 
 
 
-                        <a href="{{ route('shop.byCategoryName', ['name' => 'sale']) }}"
+                        <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('sale')]) }}"
                             class="btn-link default-underline text-uppercase fw-medium mt-3">View All</a>
                     </div>
                     <div class="col-md-6 col-lg-8 col-xl-80per">
@@ -287,13 +294,14 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="category-banner__item border-radius-10 mb-5">
-                            <img loading="lazy" class="img-fluid w-100" src="{{ asset('images/home/new collection.jpg') }}"
-     alt="New Collection" style="border-radius:50%; height: 665px; object-fit: cover;" />
+                            <img loading="lazy" class="img-fluid w-100"
+                                src="{{ asset('images/home/new collection.jpg') }}" alt="New Collection"
+                                style="border-radius:50%; height: 665px; object-fit: cover;" />
 
 
                             <div class="category-banner__item-content" style="border: 1px solid black;">
                                 <h3 class="mb-0">Accessories</h3>
-                                <a href="{{ route('shop.byCategoryName', ['name' => 'Accessories']) }}"
+                                <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Accessories')]) }}"
                                     class="btn-link default-underline text-uppercase fw-medium">Shop Now</a>
                             </div>
                         </div>
@@ -301,13 +309,13 @@
                     <div class="col-md-6">
                         <div class="category-banner__item border-radius-10 mb-5">
                             <img loading="lazy" class="img-fluid w-100" src="{{ asset('images/home/daily deals.jpg') }}"
-                               style="border-radius:50%; height: 665px; object-fit: cover;" alt="daily deals" />
+                                style="border-radius:50%; height: 665px; object-fit: cover;" alt="daily deals" />
                             <div class="category-banner__item-mark">
                                 Hot Deals
                             </div>
                             <div class="category-banner__item-content" style="border: 1px solid black;">
                                 <h3 class="mb-0">Spring-Summer Specials</h3>
-                                <a href="{{ route('shop.byCategoryName', ['name' => 'daily deals']) }}"
+                                <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('daily deals')]) }}"
                                     class="btn-link default-underline text-uppercase fw-medium">Shop Now</a>
                             </div>
                         </div>
@@ -372,7 +380,7 @@
         </div>
 
         <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
-        
+
         <section class="category-carousel container">
             <h2 class="section-title text-center mb-3 pb-xl-2 mb-xl-4">Shop by Brand</h2>
 
@@ -420,8 +428,8 @@
                             <div class="swiper-slide">
                                 <a href="{{ route('shop.index', $brand->slug) }}">
                                     <img loading="lazy" class="w-100 h-auto mb-3"
-                                        src="{{ asset('uploads/brands/thumbnails/' . $brand->image) }}"
-                                        width="124" height="124" alt="" style=" border-radius: 50%;" /></a>
+                                        src="{{ asset('uploads/brands/thumbnails/' . $brand->image) }}" width="124"
+                                        height="124" alt="" style=" border-radius: 50%;" /></a>
                                 <div class="text-center">
                                     <a href="{{ route('shop.index', $brand->slug) }}"
                                         class="menu-link fw-medium">{{ $brand->name }}</a>
@@ -446,6 +454,6 @@
                 </div><!-- /.products-carousel__next -->
             </div><!-- /.position-relative -->
         </section>
-       <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
+        <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
     </main>
 @endsection

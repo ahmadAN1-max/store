@@ -11,7 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <meta name="author" content="Sarah's Palace" />
-       <link rel="shortcut icon" href="{{ asset('images/favicon.ico') }}" />
+    <link rel="shortcut icon" href="{{ asset('images/favicon.ico') }}" />
     <link rel="apple-touch-icon-precomposed" href="{{ asset('images/favicon.ico') }}" />
     <link rel="preconnect" href="https://fonts.gstatic.com/">
 
@@ -468,7 +468,7 @@
                                                 <ul class="collapse list-unstyled ps-3" id="{{ $genderId }}">
                                                     @foreach ($subCategories as $sub)
                                                         <li>
-                                                            <a href="{{ route('shop.byCategoryName', ['name' => $sub]) }}"
+                                                            <a href="{{ route('shop.byCategorySlug', ['slug' => $sub]) }}"
                                                                 class="nav-link">{{ $sub }}</a>
                                                         </li>
                                                     @endforeach
@@ -488,35 +488,35 @@
                                 </a>
                                 <ul class="collapse list-unstyled ps-3" id="{{ $exclusiveId }}">
                                     <li>
-                                        <a href="{{ route('shop.byCategoryName', ['name' => 'NewBorn Boy (0-0 -->6-9)', 'exclusive' => true]) }}"
+                                        <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('NewBorn Boy (0-0 -->6-9)'), 'exclusive' => true]) }}"
                                             class="nav-link">Exclusive NewBorn Boy</a>
                                     </li>
                                     <li>
-                                        <a href="{{ route('shop.byCategoryName', ['name' => 'NewBorn Girl (0-0 -->6-9)', 'exclusive' => true]) }}"
+                                        <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('NewBorn Girl (0-0 -->6-9)'), 'exclusive' => true]) }}"
                                             class="nav-link">Exclusive NewBorn Girl</a>
                                     </li>
                                     <li>
-                                        <a href="{{ route('shop.byCategoryName', ['name' => 'Baby Boy (6-9 -->24-36)', 'exclusive' => true]) }}"
+                                        <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Baby Boy (6-9 -->24-36)'), 'exclusive' => true]) }}"
                                             class="nav-link">Exclusive Baby Boy</a>
                                     </li>
                                     <li>
-                                        <a href="{{ route('shop.byCategoryName', ['name' => 'Baby Girl (6-9 -->24-36)', 'exclusive' => true]) }}"
+                                        <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Baby Girl (6-9 -->24-36)'), 'exclusive' => true]) }}"
                                             class="nav-link">Exclusive Baby Girl</a>
                                     </li>
                                     <li>
-                                        <a href="{{ route('shop.byCategoryName', ['name' => 'Kids Boy (3y -->13-14y)', 'exclusive' => true]) }}"
+                                        <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Kids Boy (3y -->13-14y)'), 'exclusive' => true]) }}"
                                             class="nav-link">Exclusive Kids Boy</a>
                                     </li>
                                     <li>
-                                        <a href="{{ route('shop.byCategoryName', ['name' => 'Kids Girl (3y -->13-14y)', 'exclusive' => true]) }}"
+                                        <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Kids Girl (3y -->13-14y)'), 'exclusive' => true]) }}"
                                             class="nav-link">Exclusive Kids Girl</a>
                                     </li>
                                     <li>
-                                        <a href="{{ route('shop.byCategoryName', ['name' => 'Junior Boy (8y -->16y)', 'exclusive' => true]) }}"
+                                        <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Junior Boy (8y -->16y)'), 'exclusive' => true]) }}"
                                             class="nav-link">Exclusive Junior Boy</a>
                                     </li>
                                     <li>
-                                        <a href="{{ route('shop.byCategoryName', ['name' => 'Junior Girl (8y -->16y)', 'exclusive' => true]) }}"
+                                        <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Junior Girl (8y -->16y)'), 'exclusive' => true]) }}"
                                             class="nav-link">Exclusive Junior Girl</a>
                                     </li>
                                 </ul>
@@ -613,7 +613,7 @@
                                     @foreach ($genders as $gender => $subCategories)
                                         <li class="dropdown-submenu d-flex align-items-center justify-content-between">
                                             <!-- رابط الـ Gender -->
-                                            <a href="{{ route('shop.byCategoryName', ['name' => $gender ]) }}"
+                                            <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug($gender)]) }}"
                                                 class="dropdown-item flex-grow-1">{{ $gender }}</a>
 
                                             <!-- زر السهم لفتح المزيد -->
@@ -626,7 +626,7 @@
                                             <ul class="dropdown-menu">
                                                 @foreach ($subCategories as $sub)
                                                     <li>
-                                                        <a href="{{ route('shop.byCategoryName', ['name' => $sub]) }}"
+                                                        <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug($sub)]) }}"
                                                             class="dropdown-item">{{ $sub }}</a>
                                                     </li>
                                                 @endforeach
@@ -644,52 +644,51 @@
                             <ul class="dropdown-menu">
 
                                 <li>
-                                    <a href="{{ route('shop.byCategoryName', ['name' => 'NewBorn Boy (0-0 -->6-9)', 'exclusive' => true]) }}"
+                                    <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('NewBorn Boy (0-0 -->6-9)'), 'exclusive' => true]) }}"
                                         class="dropdown-item">
                                         Exclusive NewBorn Boy
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{{ route('shop.byCategoryName', ['name' => 'NewBorn Girl (0-0 -->6-9)', 'exclusive' => true]) }}"
+                                    <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('NewBorn Girl (0-0 -->6-9)'), 'exclusive' => true]) }}"
                                         class="dropdown-item">
                                         Exclusive NewBorn Girl
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{{ route('shop.byCategoryName', ['name' => 'Baby Boy (6-9 -->24-36)', 'exclusive' => true]) }}"
+                                    <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Baby Boy (6-9 -->24-36)'), 'exclusive' => true]) }}"
                                         class="dropdown-item">
                                         Exclusive Baby Boy
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{{ route('shop.byCategoryName', ['name' => 'Baby Girl (6-9 -->24-36)', 'exclusive' => true]) }}"
+                                    <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Baby Girl (6-9 -->24-36)'), 'exclusive' => true]) }}"
                                         class="dropdown-item">
                                         Exclusive Baby Girl
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{{ route('shop.byCategoryName', [
-                                        'name' => 'Kids Boy (3y -->13-14y)',
+                                    <a href="{{ route('shop.byCategorySlug', [
+                                        'slug' => Str::slug('Kids Boy (3y -->13-14y)'),
                                         'exclusive' => true,
                                     ]) }}"
                                         class="dropdown-item">Exclusive Kids Boy</a>
                                 </li>
                                 <li>
-                                    <a href="{{ route('shop.byCategoryName', ['name' => 'Kids Girl (3y -->13-14y)', 'exclusive' => true]) }}"
+                                    <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Kids Girl (3y -->13-14y)'), 'exclusive' => true]) }}"
                                         class="dropdown-item">Exclusive Kids Girl</a>
                                 </li>
 
                                 <li>
-                                    <a href="{{ route('shop.byCategoryName', [
-                                        'name' => 'Junior Boy (8y -->16y)',
+                                    <a href="{{ route('shop.byCategorySlug', [
+                                        'slug' => Str::slug('Junior Boy (8y -->16y)'),
                                         'exclusive' => true,
                                     ]) }}"
                                         class="dropdown-item">Exclusive Junior Boy</a>
                                 </li>
                                 <li>
-                                    <a href="{{ route('shop.byCategoryName', [
-                                        'name' => '
-                                                                                                                                                Junior Girl (8y -->16 y)',
+                                    <a href="{{ route('shop.byCategorySlug', [
+                                        'slug' => Str::slug('Junior Girl (8y -->16 y)'),
                                         'exclusive' => true,
                                     ]) }}"
                                         class="dropdown-item">Exclusive Junior Girl</a>
@@ -753,7 +752,8 @@
                         </div>
 
                         <div class="search-popup js-hidden-content">
-                            <form action="{{ route('product.search') }}" method="GET" class="search-field container">
+                            <form action="{{ route('product.search') }}" method="GET"
+                                class="search-field container">
                                 <p class="text-uppercase text-secondary fw-medium mb-4">What are you looking for?</p>
                                 <div class="position-relative">
                                     <input class="search-field__input search-popup__input w-100 fw-medium"
@@ -772,36 +772,36 @@
                                         <h6 class="sub-menu__title fs-base">Quicklinks</h6>
                                         <ul class="sub-menu__list list-unstyled">
                                             <li class="sub-menu__item"><a class="menu-link menu-link_us-s"
-                                                    href="{{ route('shop.byCategoryName', ['name' => 'NewBorn Boy (0-0 -->6-9)']) }}">NewBorn
+                                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('NewBorn Boy (0-0 -->6-9)')]) }}">NewBorn
                                                     Boy</a>
                                             </li>
                                             <li class="sub-menu__item"><a class="menu-link menu-link_us-s"
-                                                    href="{{ route('shop.byCategoryName', ['name' => 'NewBorn Girl (0-0 -->6-9)']) }}">NewBorn
+                                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('NewBorn Girl (0-0 -->6-9)')]) }}">NewBorn
                                                     Girl</a></li>
 
                                             <li class="sub-menu__item"><a class="menu-link menu-link_us-s"
-                                                    href="{{ route('shop.byCategoryName', ['name' => 'Baby Girl (6-9 -->24-36)']) }}">Baby
+                                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Baby Girl (6-9 -->24-36)')]) }}">Baby
                                                     Boy</a></li>
                                             <li class="sub-menu__item"><a class="menu-link menu-link_us-s"
-                                                    href="{{ route('shop.byCategoryName', ['name' => 'Baby Boy (6-9 -->24-36)']) }}">Baby
+                                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Baby Boy (6-9 -->24-36)')]) }}">Baby
                                                     Girl</a>
                                             </li>
 
 
                                             <li class="sub-menu__item"><a class="menu-link menu-link_us-s"
-                                                    href="{{ route('shop.byCategoryName', ['name' => 'Kids Boy (3y -->13-14y)']) }}">Kids
+                                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Kids Boy (3y -->13-14y)')]) }}">Kids
                                                     Boy</a>
                                             </li>
                                             <li class="sub-menu__item"><a class="menu-link menu-link_us-s"
-                                                    href="{{ route('shop.byCategoryName', ['name' => 'Kids Girl (3y -->13-14y)']) }}">Kids
+                                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Kids Girl (3y -->13-14y)')]) }}">Kids
                                                     Girl </a>
                                             </li>
                                             <li class="sub-menu__item"><a class="menu-link menu-link_us-s"
-                                                    href="{{ route('shop.byCategoryName', ['name' => 'Junior Boy (8y -->16y)']) }}">Junior
+                                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Junior Boy (8y -->16y)')]) }}">Junior
                                                     Boy</a>
                                             </li>
                                             <li class="sub-menu__item"><a class="menu-link menu-link_us-s"
-                                                    href="{{ route('shop.byCategoryName', ['name' => 'Junior Girl (8y -->16y)']) }}">Junior
+                                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Junior Girl (8y -->16y)')]) }}">Junior
                                                     Girl</a></li>
                                         </ul>
 
@@ -906,36 +906,36 @@
                         <h6 class="sub-menu__title text-uppercase">Categories</h6>
                         <ul class="sub-menu__list list-unstyled">
                             <li class="sub-menu__item"><a
-                                    href="{{ route('shop.byCategoryName', ['name' => 'NewBorn Boy (0-0 -->6-9)']) }}">NewBorn
+                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('NewBorn Boy (0-0 -->6-9)')]) }}">NewBorn
                                     Boy</a>
                             </li>
                             <li class="sub-menu__item"><a
-                                    href="{{ route('shop.byCategoryName', ['name' => 'NewBorn Girl (0-0 -->6-9)']) }}">NewBorn
+                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('NewBorn Girl (0-0 -->6-9)')]) }}">NewBorn
                                     Girl</a></li>
 
                             <li class="sub-menu__item"><a
-                                    href="{{ route('shop.byCategoryName', ['name' => 'Baby Girl (6-9 -->24-36)']) }}">Baby
+                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Baby Girl (6-9 -->24-36)')]) }}">Baby
                                     Boy</a></li>
                             <li class="sub-menu__item"><a
-                                    href="{{ route('shop.byCategoryName', ['name' => 'Baby Boy (6-9 -->24-36)']) }}">Baby
+                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Baby Boy (6-9 -->24-36)')]) }}">Baby
                                     Girl</a>
                             </li>
 
 
                             <li class="sub-menu__item"><a
-                                    href="{{ route('shop.byCategoryName', ['name' => 'Kids Boy (3y -->13-14y)']) }}">Kids
+                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Kids Boy (3y -->13-14y)')]) }}">Kids
                                     Boy</a>
                             </li>
                             <li class="sub-menu__item"><a
-                                    href="{{ route('shop.byCategoryName', ['name' => 'Kids Girl (3y -->13-14y)']) }}">Kids
+                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Kids Girl (3y -->13-14y)')]) }}">Kids
                                     Girl </a>
                             </li>
                             <li class="sub-menu__item"><a
-                                    href="{{ route('shop.byCategoryName', ['name' => 'Junior Boy (8y -->16y)']) }}">Junior
+                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Junior Boy (8y -->16y)')]) }}">Junior
                                     Boy</a>
                             </li>
                             <li class="sub-menu__item"><a
-                                    href="{{ route('shop.byCategoryName', ['name' => 'Junior Girl (8y -->16y)']) }}">Junior
+                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Junior Girl (8y -->16y)')]) }}">Junior
                                     Girl</a></li>
                         </ul>
                     </div>
@@ -944,13 +944,13 @@
                         <h6 class="sub-menu__title text-uppercase">Shop</h6>
                         <ul class="sub-menu__list list-unstyled">
                             <li class="sub-menu__item"><a
-                                    href="{{ route('shop.byCategoryName', ['name' => 'Accessories']) }}">Accessories</a>
+                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Accessories')]) }}">Accessories</a>
                             </li>
                             <li class="sub-menu__item"><a
-                                    href="{{ route('shop.byCategoryName', ['name' => 'sale']) }}">Sales</a>
+                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('sale')]) }}">Sales</a>
                             </li>
                             <li class="sub-menu__item"><a
-                                    href="{{ route('shop.byCategoryName', ['name' => 'Exclusive Website']) }}">Exclusive
+                                    href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Exclusive Website')]) }}">Exclusive
                                     Website</a>
                             </li>
                         </ul>
