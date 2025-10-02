@@ -376,123 +376,144 @@ class PosController extends Controller
         return view('pos.product-edit', compact('product', 'categories', 'brands', 'items'));
     }
 
-    public function update_product(Request $request)
-    {
-        $request->validate([
-            'name' => 'required',
-            'slug' => 'required|unique:products,slug,' . $request->id,
-            'category_id' => 'required|array',
-            'category_id.*' => 'exists:categories,id',
-            'unit_cost' => 'nullable',
-            'brand_id' => 'required',
-            'regular_price' => 'required',
-            'SKU' => 'required',
-            'stock_status' => 'required',
+  public function update_product(Request $request)
+{
+    $request->validate([
+        'name' => 'required',
+        'slug' => 'required|unique:products,slug,' . $request->id,
+        'category_id' => 'required|array',
+        'category_id.*' => 'exists:categories,id',
+        'unit_cost' => 'nullable',
+        'brand_id' => 'required',
+        'regular_price' => 'required',
+        'SKU' => 'required',
+        'stock_status' => 'required',
+        'quantity' => 'required',
+    ]);
 
-            'quantity' => 'required',
-        ]);
+    $product = Product::findOrFail($request->id);
 
-        $product = Product::findOrFail($request->id);
-
-        if (!$product->parent) {
-            abort(404, 'Parent product not found');
-        }
-
-        if ($request->sizes) {
-            $sizes = array_map('trim', explode(',', $request->sizes));
-            $existingChildren = $product->children()->get()->keyBy('sizes');
-
-            foreach ($sizes as $size) {
-                if (isset($existingChildren[$size])) {
-                    // إذا موجود مسبقًا، حدث أي بيانات إذا بدك (مثلاً السعر، barcode)
-                    $child = $existingChildren[$size];
-                    $child->regular_price = $request->regular_price;
-                    $child->sale_price = $request->sale_price;
-                    $child->barcode = $sizeBarcodes[$size] ?? $child->barcode;
-                    $child->save();
-                } else {
-                    // إنشاء child جديد
-                    $childProduct = new Product();
-                    $childProduct->name = $request->name;
-                    $childProduct->slug = Str::slug($request->name) . '-' . strtolower($size);
-                    $childProduct->short_description = $request->short_description ?? '';
-                    $childProduct->description = $request->description ?? '';
-                    $childProduct->regular_price = $request->regular_price;
-                    $childProduct->sale_price = $request->sale_price;
-                    $childProduct->SKU = $request->SKU . '-' . strtoupper($size);
-                    $childProduct->unit_cost = $request->unit_cost;
-                    $childProduct->stock_status = $request->stock_status;
-                    $childProduct->featured = $request->featured;
-                    $childProduct->quantity = 0;
-                    $childProduct->sizes = $size;
-                    $childProduct->parent = false;
-                    $childProduct->store = 'SP';
-                    $childProduct->parent_id = $product->id;
-                    $childProduct->brand_id = $request->brand_id;
-                    $childProduct->image = $product->image;
-                    $childProduct->images = $product->images;
-                    $childProduct->barcode = $sizeBarcodes[$size] ?? null;
-                    $childProduct->save();
-                    $childProduct->categories()->sync($request->category_id);
-                }
-            }
-
-            // حذف الأطفال الذين لم يعودوا موجودين بشرط أن تكون الكمية صفر
-            foreach ($existingChildren as $size => $child) {
-                if (!in_array($size, $sizes) && $child->quantity === 0) {
-                    $child->categories()->detach();
-                    $child->delete();
-                }
-            }
-        }
-
-        if ($request->has('quantities')) {
-            $totalQuantity = 0;
-
-            foreach ($request->quantities as $childId => $quantity) {
-                $child = Product::find($childId);
-                if ($child && $child->parent_id == $product->id) {
-                    $child->quantity = $quantity;
-
-                    if ($request->has('barcodes') && isset($request->barcodes[$childId])) {
-                        $child->barcode = $request->barcodes[$childId];
-                    }
-
-                    $child->save();
-
-                    $totalQuantity += $quantity;
-                }
-            }
-            if ($request->has('sale_price')) {
-                foreach ($product->children as $child) {
-                    $child->sale_price = $request->sale_price;
-                    $child->save();
-                }
-            }
-
-
-            $product->quantity = $totalQuantity;
-        }
-
-        $product->name = $request->name;
-        $product->slug = Str::slug($request->name);
-        $product->unit_cost = $request->unit_cost;
-        $product->short_description = $request->short_description ?? '';
-        $product->description = $request->description ?? '';
-        $product->regular_price = $request->regular_price;
-        $product->sale_price = $request->sale_price;
-        $product->SKU = $request->SKU;
-        $product->stock_status = $request->stock_status;
-        $product->featured = 0;
-
-        $product->categories()->sync($request->category_id);
-
-        $product->brand_id = $request->brand_id;
-
-        $product->save();
-
-        return redirect()->route('pos.products')->with('status', 'Product and quantities updated successfully!');
+    if (!$product->parent) {
+        abort(404, 'Parent product not found');
     }
+
+    // معالجة باركود الأحجام
+    $sizeBarcodes = [];
+    if ($request->size_barcodes) {
+        $lines = explode("\n", $request->size_barcodes);
+        foreach ($lines as $line) {
+            if (strpos($line, ':') !== false) {
+                [$size, $barcode] = array_map('trim', explode(':', $line, 2));
+                $sizeBarcodes[$size] = $barcode;
+            }
+        }
+    }
+
+    if ($request->sizes) {
+        $sizes = array_map('trim', explode(',', $request->sizes));
+        $existingChildren = $product->children()->get()->keyBy('sizes');
+
+        foreach ($sizes as $size) {
+            if (isset($existingChildren[$size])) {
+                // تحديث بيانات الطفل الموجود
+                $child = $existingChildren[$size];
+                $child->regular_price = $request->regular_price;
+                $child->sale_price = $request->sale_price;
+
+                if (isset($sizeBarcodes[$size])) {
+                    $barcodeExists = Product::where('barcode', $sizeBarcodes[$size])->where('id', '!=', $child->id)->first();
+                    $child->barcode = $barcodeExists ? $child->id : $sizeBarcodes[$size];
+                }
+
+                $child->save();
+            } else {
+                // إنشاء طفل جديد
+                $childProduct = new Product();
+                $childProduct->name = $request->name;
+                $childProduct->slug = Str::slug($request->name) . '-' . strtolower($size);
+                $childProduct->short_description = $request->short_description ?? '';
+                $childProduct->description = $request->description ?? '';
+                $childProduct->regular_price = $request->regular_price;
+                $childProduct->sale_price = $request->sale_price;
+                $childProduct->SKU = $request->SKU . '-' . strtoupper($size);
+                $childProduct->unit_cost = $request->unit_cost;
+                $childProduct->stock_status = $request->stock_status;
+                $childProduct->featured = $request->featured;
+                $childProduct->quantity = 0;
+                $childProduct->sizes = $size;
+                $childProduct->parent = false;
+                $childProduct->store = 'SP';
+                $childProduct->parent_id = $product->id;
+                $childProduct->brand_id = $request->brand_id;
+                $childProduct->image = $product->image;
+                $childProduct->images = $product->images;
+
+                if (isset($sizeBarcodes[$size])) {
+                    $barcodeExists = Product::where('barcode', $sizeBarcodes[$size])->first();
+                    $childProduct->barcode = $barcodeExists ? $childProduct->id : $sizeBarcodes[$size];
+                }
+
+                $childProduct->save();
+                $childProduct->categories()->sync($request->category_id);
+            }
+        }
+
+        // حذف الأطفال الذين لم يعودوا موجودين بشرط أن تكون الكمية صفر
+        foreach ($existingChildren as $size => $child) {
+            if (!in_array($size, $sizes) && $child->quantity === 0) {
+                $child->categories()->detach();
+                $child->delete();
+            }
+        }
+    }
+
+    if ($request->has('quantities')) {
+        $totalQuantity = 0;
+
+        foreach ($request->quantities as $childId => $quantity) {
+            $child = Product::find($childId);
+            if ($child && $child->parent_id == $product->id) {
+                $child->quantity = $quantity;
+
+                if ($request->has('barcodes') && isset($request->barcodes[$childId])) {
+                    $barcodeExists = Product::where('barcode', $request->barcodes[$childId])->where('id', '!=', $child->id)->first();
+                    $child->barcode = $barcodeExists ? $child->id : $request->barcodes[$childId];
+                }
+
+                $child->save();
+                $totalQuantity += $quantity;
+            }
+        }
+
+        // تحديث سعر البيع لجميع الأطفال
+        if ($request->has('sale_price')) {
+            foreach ($product->children as $child) {
+                $child->sale_price = $request->sale_price;
+                $child->save();
+            }
+        }
+
+        $product->quantity = $totalQuantity;
+    }
+
+    // تحديث بيانات الأب
+    $product->name = $request->name;
+    $product->slug = Str::slug($request->name);
+    $product->unit_cost = $request->unit_cost;
+    $product->short_description = $request->short_description ?? '';
+    $product->description = $request->description ?? '';
+    $product->regular_price = $request->regular_price;
+    $product->sale_price = $request->sale_price;
+    $product->SKU = $request->SKU;
+    $product->stock_status = $request->stock_status;
+    $product->featured = 0;
+    $product->categories()->sync($request->category_id);
+    $product->brand_id = $request->brand_id;
+    $product->save();
+
+    return redirect()->route('pos.products')->with('status', 'Product and quantities updated successfully!');
+}
+
 
     public function delete_product($id)
     {
@@ -978,42 +999,54 @@ class PosController extends Controller
         return view("pos.reports", compact('bills', 'categories'));
     }
 
-    public function generateReport(Request $request)
-    {
-        $request->validate([
-            'date_from' => 'required|date',
-            'date_to' => 'required|date|after_or_equal:date_from',
-            'report_type' => 'required|in:pos,web,both',
-            'category_id' => 'nullable|exists:categories,id',
-        ]);
+   public function generateReport(Request $request)
+{
+    $request->validate([
+        'date_from' => 'required|date',
+        'date_to' => 'required|date|after_or_equal:date_from',
+        'report_type' => 'required|in:pos,web,both',
+        'store' => 'required|string',
+        'category_id' => 'nullable|exists:categories,id',
+    ]);
 
-        $from = $request->date_from;
-        $to = $request->date_to;
-        $type = $request->report_type;
-        $categoryId = $request->category_id;
+    $from = $request->date_from;
+    $to = $request->date_to;
+    $type = $request->report_type;
+    $store = $request->store;
+    $categoryId = $request->category_id;
 
-        $query = Bill::with(['billItems.product.categories']) // علاقة الكاتيغوري
-            ->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
-        if ($type === 'pos') {
-            $query->whereIn('status', ['paid']); // أمثلة لحالة POS فقط
-        } elseif ($type === 'web') {
-            $query->whereIn('status', ['paidWebsite']); // حالة ويب فقط
-        } else {
-            $query->whereIn('status', ['paid', 'paidWebsite']); // حالة ويب فقط
-        } // else 'both' لا نفلتر على الحالة
+    $query = Bill::with(['billItems.product.categories'])
+        ->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
 
-        if ($categoryId) {
-            $query->whereHas('billItems.product.categories', function ($q) use ($categoryId) {
-                $q->where('categories.id', $categoryId);
-            });
-        }
-
-
-        $bills = $query->get();
-        $categories = Category::all();
-
-        return view('pos.reports', compact('bills', 'from', 'to', 'type', 'categories', 'categoryId'));
+    // فلتر حسب نوع التقرير
+    if ($type === 'pos') {
+        $query->whereIn('status', ['paid']);
+    } elseif ($type === 'web') {
+        $query->whereIn('status', ['paidWebsite']);
+    } else { // both
+        $query->whereIn('status', ['paid', 'paidWebsite']);
     }
+
+    // فلتر حسب المتجر
+    if ($store !== 'both') {
+        $query->whereHas('billItems.product', function ($q) use ($store) {
+            $q->where('store', $store);
+        });
+    }
+
+    // فلتر حسب الكاتيجوري
+    if ($categoryId) {
+        $query->whereHas('billItems.product.categories', function ($q) use ($categoryId) {
+            $q->where('categories.id', $categoryId);
+        });
+    }
+
+    $bills = $query->get();
+    $categories = Category::all();
+
+    return view('pos.reports', compact('bills', 'from', 'to', 'type', 'store', 'categories', 'categoryId'));
+}
+
 
     public function return()
     {
@@ -1089,6 +1122,7 @@ class PosController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
     public function settings()
     {
         $maxDiscountSetting = DB::table('settings')->where('key', 'maxDiscount')->first();

@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="{{ asset('css/sweetalert.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}" />
 
-   <link rel="shortcut icon" href="{{ asset('images/favicon.ico') }}" />
+    <link rel="shortcut icon" href="{{ asset('images/favicon.ico') }}" />
     <link rel="apple-touch-icon-precomposed" href="{{ asset('images/favicon.ico') }}" />
     @stack('styles')
 </head>
@@ -124,12 +124,7 @@
                                             </li>
                                         </ul>
                                     </li>
-                                    <li class="menu-item">
-                                        <a href="{{ route('pos.reports') }}" class="">
-                                            <div class="icon"><i class="icon-bar-chart"></i></div>
-                                            <div class="text">Reports</div>
-                                        </a>
-                                    </li>
+
                                     <li class="menu-item">
                                         <a href="{{ route('pos.settings') }}" class="">
                                             <div class="icon"><i class="icon-settings"></i></div>
@@ -137,6 +132,7 @@
                                         </a>
                                     </li>
                                 @endif
+
                                 <li class="menu-item">
                                     <a href="{{ route('pos.customers') }}" class="">
                                         <div class="icon"><i class="icon-users"></i></div>
@@ -147,6 +143,12 @@
                                     <a href="{{ route('pos.bills') }}" class="">
                                         <div class="icon"><i class="icon-file-text"></i></div>
                                         <div class="text">Bills</div>
+                                    </a>
+                                </li>
+                                <li class="menu-item">
+                                    <a href="{{ route('pos.reports') }}" class="">
+                                        <div class="icon"><i class="icon-bar-chart"></i></div>
+                                        <div class="text">Reports</div>
                                     </a>
                                 </li>
 

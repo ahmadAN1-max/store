@@ -1,37 +1,32 @@
 @extends('layouts.pos')
 @section('content')
     <style>
-        .modal-backdrop.show {
-            background-color: transparent !important;
-        }
-
-        /* Container */
-        .container {
-            max-width: 1000px;
-        }
-
         :root {
             --primary-color: #0d6efd;
             --secondary-color: #f8f9fa;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
             --text-dark: #212529;
             --border-radius: 10px;
             --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* أساسيات */
         body {
             font-family: var(--font-family);
-            background-color: #ffffff;
+            background-color: var(--secondary-color);
             color: var(--text-dark);
         }
 
         .container {
-            max-width: 960px;
+            max-width: 1000px;
             margin: auto;
             padding: 2rem 1rem;
+            background-color: #fff;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
-        /* العنوان */
         h2 {
             font-size: 2rem;
             font-weight: 600;
@@ -40,35 +35,32 @@
             text-align: center;
         }
 
-        /* الحقول */
-        input.form-control {
-            padding: 12px 15px;
-            font-size: 1rem;
+        input.form-control,
+        select.form-select {
+            padding: 10px 12px;
             border-radius: var(--border-radius);
             border: 1px solid #ced4da;
-            transition: border-color 0.3s ease;
         }
 
-        input.form-control:focus {
+        input.form-control:focus,
+        select.form-select:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.2);
+            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
         }
 
-        /* جدول المنتجات */
         table.table {
             width: 100%;
-            border-spacing: 0;
             border-collapse: collapse;
         }
 
         table thead {
             background-color: var(--primary-color);
-            color: white;
+            color: #fff;
         }
 
         table th,
         table td {
-            padding: 12px;
+            padding: 10px;
             text-align: center;
             border-bottom: 1px solid #dee2e6;
         }
@@ -77,27 +69,23 @@
             background-color: #f1f3f5;
         }
 
-        /* أزرار */
         .btn {
-            padding: 12px 20px;
             border-radius: var(--border-radius);
             font-weight: 600;
-            font-size: 1rem;
-            border: none;
-            transition: background-color 0.2s ease;
+            transition: 0.2s;
         }
 
         .btn-success {
-            background-color: var(--primary-color);
+            background-color: var(--success-color);
             color: white;
         }
 
         .btn-success:hover {
-            background-color: #0b5ed7;
+            background-color: #157347;
         }
 
         .btn-warning {
-            background-color: #ffc107;
+            background-color: var(--warning-color);
             color: black;
         }
 
@@ -115,36 +103,27 @@
         }
 
         .btn-danger {
-            background-color: #dc3545;
+            background-color: var(--danger-color);
             color: white;
-            padding: 6px 12px;
-            font-size: 0.9rem;
         }
 
         .btn-danger:hover {
             background-color: #c82333;
         }
 
-        /* Modal */
-        .modal-header,
-        .modal-footer {
-            border: none;
-        }
-
-        .modal-title {
-            font-size: 1.2rem;
-            color: var(--primary-color);
-        }
-
-        /* Discount / Total Inputs */
         #discountInput,
         #totalAmount {
             font-size: 1.1rem;
-            padding: 12px;
+            padding: 10px;
             border-radius: var(--border-radius);
         }
 
-        /* Responsive */
+        .bottom-page {
+            margin-top: 20px;
+            text-align: center;
+            color: #6c757d;
+        }
+
         @media (max-width: 768px) {
             h2 {
                 font-size: 1.6rem;
@@ -160,223 +139,146 @@
             }
         }
     </style>
-
-    <div class="main-content">
-        <div class="main-content-inner">
-            <div class="main-content-wrap">
-
-                <div class="container">
-                    <input type="text" id="employee" name="employee" class="form-control" placeholder="Employee" required>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#customersModal">
-                        Select Customer
-                    </button>
-
-                    <div id="selectedCustomer" class="alert alert-info d-none mt-3">
-                        <strong>Customer name:</strong> <span id="customerName"></span> <br>
-                        <strong>Phone Number:</strong> <span id="customerPhone"></span>
-                    </div>
-                    <h2>POS Dashboard</h2>
-                </div>
-                {{-- Input Scan --}}
-                @if (empty($billItems))
-                    <input type="text" id="barcodeInput" style="margin-top:30px" class="form-control"
-                        placeholder="Scan Barcode..." autofocus>
-                @endif
-                {{-- Table with scroll --}}
-                <div style="height: 280px; overflow-y: auto;">
-                    <table id="scannedProductsTable" class="table table-bordered mt-3">
-                        <thead>
-                            <tr>
-                                <th>Product</th>
-                                <th>Barcode</th>
-                                <th>Size</th>
-                                <th>Price ($)</th>
-                                <th>Sale Price ($)</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (!empty($billItems))
-                                @foreach ($billItems as $item)
-                                    <tr data-product-id="{{ $item->product_id }}" data-child-id="{{ $item->child_id }}">
-                                        <td style="text-align: center">{{ $item->product->name ?? 'N/A' }}</td>
-                                        <td style="text-align: center">{{ $item->child->barcode ?? 'N/A' }}</td>
-                                        <td style="text-align: center">{{ $item->child->sizes ?? 'N/A' }}</td>
-                                        <td class="price-cell" style="text-align: center">
-                                            {{ number_format($item->price, 2) }}
-                                        </td>
-                                        <td class="sale-price-cell" style="text-align: center">
-                                            {{ number_format($item->salePrice, 2) }}
-                                        </td>
-                                        <td style="text-align: center">
-                                            <button class="btn btn-danger btn-sm remove-btn">❌</button>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            @endif
-                        </tbody>
-                    </table>
-                </div>
-
-                {{-- Sidebar buttons --}}
-                <div class="col-md-4" style="margin-left: auto;">
-                    @if (!empty($billItems))
-                        <button class="btn btn-success mb-3" style="width: 100%; padding: 15px; font-size: 1.25rem;"
-                            id="checkoutSavedBtn">
-                            SUBTOTAL
-                        </button>
-
-                        <div class="d-flex justify-content-between mb-3">
-                            <button class="btn btn-warning" style="flex: 1; margin-right: 10px;" data-bs-toggle="modal"
-                                data-bs-target="#holdBillModal">
-                                Save
-                            </button>
-                            <button class="btn btn-secondary" style="flex: 1;" id="clearBtn">
-                                Clear
-                            </button>
-                        </div>
-                    @else
-                        <button class="btn btn-success mb-3" style="width: 100%; padding: 15px; font-size: 1.25rem;"
-                            id="checkoutBtn">
-                            SUBTOTAL
-                        </button>
-
-                        <div class="d-flex justify-content-between mb-3">
-                            <button class="btn btn-warning" style="flex: 1; margin-right: 10px;" data-bs-toggle="modal"
-                                data-bs-target="#holdBillModal" onClick="giveHoldValues()">
-                                Hold Bill
-                            </button>
-                            <button class="btn btn-secondary" style="flex: 1;" id="clearBtn">
-                                Clear
-                            </button>
-                        </div>
-                    @endif
-
-                    {{-- Discount and Total --}}
-                    <div class="row g-2">
-                        <div class="col-4">
-                            <input type="number" id="discountInput" class="form-control" placeholder="Discount">
-                        </div>
-                        <div class="col-8">
-                            <input type="text" id="totalAmount" class="form-control" readonly placeholder="Total"
-                                style="font-weight: bold; font-size: 1.3rem;">
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Customers Modal --}}
-                <div class="modal fade" id="customersModal" tabindex="-1">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Find Customer </h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-
-                            <div class="modal-body">
-                                {{-- Search input --}}
-                                <input type="text" id="customerSearch" class="form-control mb-3"
-                                    placeholder="Search By Name or Phone Number">
-
-                                {{-- Customers table --}}
-                                <div class="table-responsive" style="max-height:400px; overflow-y:auto;">
-                                    <table class="table table-bordered table-hover" id="customersTable">
-                                        <thead>
-                                            <tr>
-                                                <th>Name</th>
-                                                <th>Phone Number</th>
-
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach ($customers as $customer)
-                                                <tr>
-                                                    <td>{{ $customer->name }}</td>
-                                                    <td>{{ $customer->phone }}</td>
-                                                    <td>
-                                                        <button type="button"
-                                                            class="btn btn-success btn-sm select-customer"
-                                                            data-name="{{ $customer->name }}"
-                                                            data-phone="{{ $customer->phone }}" data-bs-dismiss="modal">
-
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary"
-                                    onclick="window.location.href='{{ route('pos.customer-add') }}'">
-                                    Add Customer
-                                </button>
-
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">close</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-
-                {{-- Hold Bill Modal --}}
-                <div class="modal fade" id="holdBillModal" tabindex="-1">
-                    <div class="modal-dialog">
-                        <form id="holdBillForm">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Hold Bill</h5>
-                                </div>
-                                <div class="modal-body">
-                                    <input type="text" id="holdName" value="{{ $bill->name ?? '' }}" name="name"
-                                        class="form-control mb-2" placeholder="Customer Name">
-                                    <input type="text" id="holdPhone" value="{{ $bill->phone_number ?? '' }}"
-                                        name="phone_number" class="form-control mb-2" placeholder="Phone Number">
-                                    <input type="text" value="{{ $bill->reference ?? '' }}" name="reference"
-                                        class="form-control" placeholder="Reference">
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="submit" class="btn btn-warning">Save Hold</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                {{-- Save Bill Modal --}}
-                <div class="modal fade" id="saveBillModal" tabindex="-1">
-                    <div class="modal-dialog">
-                        <form id="saveBillForm">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Save Bill</h5>
-                                </div>
-                                <div class="modal-body">
-                                    <input type="text" value="{{ $bill->name ?? '' }}" name="name"
-                                        class="form-control mb-2" placeholder="Customer Name">
-                                    <input type="text" value="{{ $bill->phone_number ?? '' }}" name="phone_number"
-                                        class="form-control mb-2" placeholder="Phone Number">
-                                    <input type="text" value="{{ $bill->reference ?? '' }}" name="reference"
-                                        class="form-control" placeholder="Reference">
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="submit" class="btn btn-warning">Save</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-
+    <br><br><br><br><br><br><br><br><br><br><br>
+    <div class="container">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <input type="text" id="employee" name="employee" class="form-control" placeholder="Employee" required>
             </div>
+            <div class="col-md-6">
+                <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#customersModal">Select
+                    Customer</button>
+            </div>
+        </div>
+
+        <div id="selectedCustomer" class="alert alert-info d-none">
+            <strong>Customer name:</strong> <span id="customerName"></span> <br>
+            <strong>Phone Number:</strong> <span id="customerPhone"></span>
+        </div>
+
+        <h2>POS Dashboard</h2>
+
+        <input type="text" id="barcodeInput" class="form-control mb-3" placeholder="Scan Barcode..." autofocus>
+
+        <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+            <table id="scannedProductsTable" class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Barcode</th>
+                        <th>Size</th>
+                        <th>Price ($)</th>
+                        <th>Sale Price ($)</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!empty($billItems))
+                        @foreach ($billItems as $item)
+                            <tr data-product-id="{{ $item->product_id }}" data-child-id="{{ $item->child_id }}">
+                                <td>{{ $item->product->name ?? 'N/A' }}</td>
+                                <td>{{ $item->child->barcode ?? 'N/A' }}</td>
+                                <td>{{ $item->child->sizes ?? 'N/A' }}</td>
+                                <td class="price-cell">{{ number_format($item->price, 2) }}</td>
+                                <td class="sale-price-cell">{{ number_format($item->salePrice, 2) }}</td>
+                                <td><button class="btn btn-danger btn-sm remove-btn">❌</button></td>
+                            </tr>
+                        @endforeach
+                    @endif
+                </tbody>
+            </table>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-6 mb-2">
+                @if ($admin)
+                    <input type="number" id="discountInput" class="form-control" placeholder="Discount">
+                @endif
+            </div>
+            <div class="col-md-6 mb-2">
+                <input type="text" id="totalAmount" class="form-control" readonly placeholder="Total">
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between mt-3 flex-wrap gap-2">
+            <button class="btn btn-success flex-fill" id="checkoutBtn">SUBTOTAL</button>
+            <button class="btn btn-warning flex-fill" data-bs-toggle="modal" data-bs-target="#holdBillModal"
+                onClick="giveHoldValues()">Hold Bill</button>
+            <button class="btn btn-secondary flex-fill" id="clearBtn">Clear</button>
         </div>
     </div>
 
     <div class="bottom-page">
         <div class="body-text">Copyright © 2025 Sarah's Palace</div>
+    </div>
+
+    {{-- Customers Modal --}}
+    <div class="modal fade" id="customersModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Find Customer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="customerSearch" class="form-control mb-3"
+                        placeholder="Search By Name or Phone">
+                    <div class="table-responsive" style="max-height:400px; overflow-y:auto;">
+                        <table class="table table-bordered table-hover" id="customersTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Phone</th>
+                                    <th>Select</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($customers as $customer)
+                                    <tr>
+                                        <td>{{ $customer->name }}</td>
+                                        <td>{{ $customer->phone }}</td>
+                                        <td>
+                                            <button type="button" class="btn btn-success btn-sm select-customer"
+                                                data-name="{{ $customer->name }}" data-phone="{{ $customer->phone }}"
+                                                data-bs-dismiss="modal">Select</button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="window.location.href='{{ route('pos.customer-add') }}'">Add
+                        Customer</button>
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Hold Bill Modal --}}
+    <div class="modal fade" id="holdBillModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="holdBillForm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Hold Bill</h5>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" id="holdName" value="{{ $bill->name ?? '' }}" name="name"
+                            class="form-control mb-2" placeholder="Customer Name">
+                        <input type="text" id="holdPhone" value="{{ $bill->phone_number ?? '' }}" name="phone_number"
+                            class="form-control mb-2" placeholder="Phone Number">
+                        <input type="text" value="{{ $bill->reference ?? '' }}" name="reference"
+                            class="form-control" placeholder="Reference">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-warning w-100">Save Hold</button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 
 @endsection

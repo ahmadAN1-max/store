@@ -139,12 +139,12 @@
                         <div class="swiper-wrapper">
                             @foreach ($categories as $category)
                                 <div class="swiper-slide">
-                                    <a href="{{ route('shop.index', $category->slug) }}">
+                                    <a href="{{ route('shop.byCategoryName', $category->slug) }}">
                                         <img loading="lazy" class="w-100 h-auto mb-3"
                                             src="{{ asset('uploads/categories/thumbnails/' . $category->image) }}"
                                             width="124" height="124" alt="" style=" border-radius: 50%;" /></a>
                                     <div class="text-center">
-                                        <a href="{{ route('shop.index', $category->slug) }}"
+                                        <a href="{{ route('shop.byCategoryName', $category->slug) }}"
                                             class="menu-link fw-medium">{{ $category->name }}</a>
                                     </div>
                                 </div>
@@ -287,8 +287,9 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="category-banner__item border-radius-10 mb-5">
-                            <img loading="lazy" class="h-auto" src="{{ asset('images/home/new collection.jpg') }}"
-                                width="690" height="665" alt="" style="border-radius:50%;" />
+                            <img loading="lazy" class="img-fluid w-100" src="{{ asset('images/home/new collection.jpg') }}"
+     alt="New Collection" style="border-radius:50%; height: 665px; object-fit: cover;" />
+
 
                             <div class="category-banner__item-content" style="border: 1px solid black;">
                                 <h3 class="mb-0">Accessories</h3>
@@ -299,8 +300,8 @@
                     </div>
                     <div class="col-md-6">
                         <div class="category-banner__item border-radius-10 mb-5">
-                            <img loading="lazy" class="h-auto" src="{{ asset('images/home/daily deals.jpg') }}"
-                                width="690" height="665" alt="" />
+                            <img loading="lazy" class="img-fluid w-100" src="{{ asset('images/home/daily deals.jpg') }}"
+                               style="border-radius:50%; height: 665px; object-fit: cover;" alt="daily deals" />
                             <div class="category-banner__item-mark">
                                 Hot Deals
                             </div>

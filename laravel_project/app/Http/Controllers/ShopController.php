@@ -78,15 +78,15 @@ class ShopController extends Controller
 
     public function categoryProducts($name, Request $request)
     {
-   $productsQuery = Product::where('parent', true)
-    ->whereNotNull('image')       // الصورة موجودة
-    ->where('image', '!=', '') 
-    ->where('featured', 1)   
-    ->whereHas('categories', function ($q) use ($name) {
-        $q->where('name', $name);
-    });
+        $productsQuery = Product::where('parent', true)
+        ->whereNotNull('image')       // الصورة موجودة
+        ->where('image', '!=', '') 
+        ->where('featured', 1)   
+        ->whereHas('categories', function ($q) use ($name) {
+    $q->where('slug', $name);
+});
 
-
+    
         if ($request->boolean('exclusive')) {
             $productsQuery->whereHas('categories', function ($q) {
                 $q->where('name', 'Exclusive Website')
@@ -98,24 +98,22 @@ class ShopController extends Controller
 
         return view('shop', compact('products', 'name'));
     }
-public function search(Request $request)
-{
+
+    public function search(Request $request)
+    {
     $keyword = $request->input('search-keyword');
 
-$products = Product::where('parent', 1)
-->where('featured', 1)
+    $products = Product::where('parent', 1)
+    ->where('featured', 1)
     ->whereNotNull('image')        // الصورة موجودة
     ->where('image', '!=', '')     // الصورة مش فاضية
     ->where(function($query) use ($keyword) {
-        $query->where('name', 'LIKE', "%{$keyword}%")
-              ->orWhere('short_description', 'LIKE', "%{$keyword}%")
-              ->orWhere('description', 'LIKE', "%{$keyword}%");
+    $query->where('name', 'LIKE', "%{$keyword}%")
+        ->orWhere('short_description', 'LIKE', "%{$keyword}%")
+        ->orWhere('description', 'LIKE', "%{$keyword}%");
     })
     ->take(10)
     ->get();
-
-
-
     // إذا الصفحة عادية
     return view('shop', compact('products'));
 }

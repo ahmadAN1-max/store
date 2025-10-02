@@ -103,7 +103,7 @@ class AdminController extends Controller
 
     public function GenerateBrandThumbailImage($image, $imageName)
     {
-        $destinationPath = '/home/customer/www/adamn85.sg-host.com/public_html/uploads/brands/thumbnails';
+        $destinationPath = '/home/customer/www/sarahspalace.com/public_html/uploads/brands/thumbnails';
         $img = Image::make($image->path());
         $img->fit(124, 124, function ($constraint) {
             $constraint->upsize();
@@ -172,7 +172,7 @@ class AdminController extends Controller
 
     public function GenerateCategoryThumbailImage($image, $imageName)
     {
-        $destinationPath = '/home/customer/www/adamn85.sg-host.com/public_html/uploads/categories/thumbnails';  
+        $destinationPath = '/home/customer/www/sarahspalace.com/public_html/uploads/categories/thumbnails';  
         $img = Image::make($image->path());
         $img->resize(124, 124, function ($constraint) {
         $constraint->aspectRatio(); // يحافظ على نسبة العرض/الارتفاع الأصلية
@@ -259,7 +259,7 @@ class AdminController extends Controller
     // ======================= Products =======================
 public function GenerateThumbnailImage($imageFile, $imageName)
 {
-    $destinationPath = '/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/thumbnails';
+    $destinationPath = '/home/customer/www/sarahspalace.com/public_html/uploads/products/thumbnails';
 
     $img = Image::make($imageFile);
     $img->fit(124, 124, function ($constraint) {
@@ -269,20 +269,20 @@ public function GenerateThumbnailImage($imageFile, $imageName)
 
 public function SaveOriginalGalleryImage($image, $imageName)
 {
-    $destinationPath = '/home/customer/www/adamn85.sg-host.com/public_html/uploads/products';
+    $destinationPath = '/home/customer/www/sarahspalace.com/public_html/uploads/products';
     $img = Image::make($image->path());
     $img->save($destinationPath . '/' . $imageName);
 }
 
 public function SaveOriginalProductImage($imageFile, $imageName)
 {
-    $destinationPath = '/home/customer/www/adamn85.sg-host.com/public_html/uploads/products';
+    $destinationPath = '/home/customer/www/sarahspalace.com/public_html/uploads/products';
     $imageFile->move($destinationPath, $imageName);
 }
 
 public function GenerateThumbnailImageFromPath($imagePath, $imageName)
 {
-    $destinationPath = '/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/thumbnails';
+    $destinationPath = '/home/customer/www/sarahspalace.com/public_html/uploads/products/thumbnails';
     $img = Image::make($imagePath);
     $img->fit(124, 124, function ($constraint) {
         $constraint->upsize();
@@ -342,7 +342,7 @@ public function product_store(Request $request)
             if (in_array($gextension, $allowedfileExtension)) {
                 $gfilename = $current_timestamp . "-" . $counter . "." . $gextension;
                 $this->SaveOriginalProductImage($file, $gfilename);
-                $fullImagePath = '/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/' . $gfilename;
+                $fullImagePath = '/home/customer/www/sarahspalace.com/public_html/uploads/products/' . $gfilename;
                 $this->GenerateThumbnailImageFromPath($fullImagePath, $gfilename);
                 $gallery_arr[] = $gfilename;
                 $counter++;
@@ -356,7 +356,7 @@ public function product_store(Request $request)
         $image = $request->file('image');
         $imageName = $current_timestamp . '.' . $image->extension();
         $this->SaveOriginalProductImage($image, $imageName);
-        $fullImagePath = '/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/' . $imageName;
+        $fullImagePath = '/home/customer/www/sarahspalace.com/public_html/uploads/products/' . $imageName;
         $this->GenerateThumbnailImageFromPath($fullImagePath, $imageName);
     }
 
@@ -548,18 +548,18 @@ public function update_product(Request $request)
     // === تعديل المسارات للصور ===
     if ($request->hasFile('image')) {
         if ($product->image) {
-            if (File::exists('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/thumbnails/' . $product->image)) {
-                File::delete('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/thumbnails/' . $product->image);
+            if (File::exists('/home/customer/www/sarahspalace.com/public_html/uploads/products/thumbnails/' . $product->image)) {
+                File::delete('/home/customer/www/sarahspalace.com/public_html/uploads/products/thumbnails/' . $product->image);
             }
-            if (File::exists('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/' . $product->image)) {
-                File::delete('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/' . $product->image);
+            if (File::exists('/home/customer/www/sarahspalace.com/public_html/uploads/products/' . $product->image)) {
+                File::delete('/home/customer/www/sarahspalace.com/public_html/uploads/products/' . $product->image);
             }
         }
 
         $image = $request->file('image');
         $imageName = Carbon::now()->timestamp . '.' . $image->extension();
-        $image->move('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/', $imageName);
-        $this->GenerateThumbnailImageFromPath('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/' . $imageName, $imageName);
+        $image->move('/home/customer/www/sarahspalace.com/public_html/uploads/products/', $imageName);
+        $this->GenerateThumbnailImageFromPath('/home/customer/www/sarahspalace.com/public_html/uploads/products/' . $imageName, $imageName);
 
         $product->image = $imageName;
     }
@@ -568,8 +568,8 @@ public function update_product(Request $request)
         $newImages = [];
         foreach ($request->file('images') as $file) {
             $imageName = Carbon::now()->timestamp . rand(1000, 9999) . '.' . $file->extension();
-            $file->move('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/', $imageName);
-            $this->GenerateThumbnailImageFromPath('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/' . $imageName, $imageName);
+            $file->move('/home/customer/www/sarahspalace.com/public_html/uploads/products/', $imageName);
+            $this->GenerateThumbnailImageFromPath('/home/customer/www/sarahspalace.com/public_html/uploads/products/' . $imageName, $imageName);
             $newImages[] = $imageName;
         }
         $allImages = $product->images ? explode(',', $product->images) : [];
@@ -586,11 +586,11 @@ public function delete_product($id)
     $product = Product::findOrFail($id);
     Product::where('parent_id', $product->id)->delete();
 
-    if (File::exists('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/thumbnails/' . $product->image)) {
-        File::delete('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/thumbnails/' . $product->image);
+    if (File::exists('/home/customer/www/sarahspalace.com/public_html/uploads/products/thumbnails/' . $product->image)) {
+        File::delete('/home/customer/www/sarahspalace.com/public_html/uploads/products/thumbnails/' . $product->image);
     }
-    if (File::exists('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/' . $product->image)) {
-        File::delete('/home/customer/www/adamn85.sg-host.com/public_html/uploads/products/' . $product->image);
+    if (File::exists('/home/customer/www/sarahspalace.com/public_html/uploads/products/' . $product->image)) {
+        File::delete('/home/customer/www/sarahspalace.com/public_html/uploads/products/' . $product->image);
     }
 
     $product->delete();
