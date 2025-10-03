@@ -2,6 +2,9 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
+<?
+use Illuminate\Support\Str;
+?>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -450,7 +453,7 @@
                             </li>
 
                             @foreach ($categories as $categoryName => $genders)
-                                @php $catId = 'cat-' . Str::slug($categoryName); @endphp
+                                @php $catId = Str::slug($categoryName); @endphp
                                 <li class="nav-item">
                                     <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="collapse"
                                         data-bs-target="#{{ $catId }}" aria-expanded="false">
@@ -468,10 +471,17 @@
                                                 <ul class="collapse list-unstyled ps-3" id="{{ $genderId }}">
                                                     @foreach ($subCategories as $sub)
                                                         <li>
-                                                            <a href="{{ route('shop.byCategorySlug', ['slug' => $sub]) }}"
+                                                            <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug($sub)]) }}"
                                                                 class="nav-link">{{ $sub }}</a>
                                                         </li>
                                                     @endforeach
+
+                                                    <li>
+                                                            <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug($gender)]) }}"
+                                                                class="nav-link">All {{ $gender }}</a>
+                                                    </li>
+
+
                                                 </ul>
                                             </li>
                                         @endforeach

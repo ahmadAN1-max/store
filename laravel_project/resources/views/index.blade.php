@@ -309,14 +309,14 @@ use Illuminate\Support\Str;
                     <div class="col-md-6">
                         <div class="category-banner__item border-radius-10 mb-5">
                             <img loading="lazy" class="img-fluid w-100" src="{{ asset('images/home/daily deals.jpg') }}"
-                                style="border-radius:50%; height: 665px; object-fit: cover;" alt="daily deals" />
+                                style="border-radius:50%; height: 665px; object-fit: cover;" alt="sale collection" />
                             <div class="category-banner__item-mark">
                                 Hot Deals
                             </div>
                             <div class="category-banner__item-content" style="border: 1px solid black;">
                                 <h3 class="mb-0">Spring-Summer Specials</h3>
-                                <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('daily deals')]) }}"
-                                    class="btn-link default-underline text-uppercase fw-medium">Shop Now</a>
+                                <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('sale')]) }}"
+                                    class="btn-link default-underline text-uppercase fw-medium">Shop Now</a>v 
                             </div>
                         </div>
                     </div>

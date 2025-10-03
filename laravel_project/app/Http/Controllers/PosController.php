@@ -538,8 +538,7 @@ class PosController extends Controller
 
         $child = $parent->children->first();
 
-        $quantity = $child->quantity;
-        if ($quantity > 0) {
+       
             return response()->json([
                 'product_id' => $parent->id,
                 'name' => $parent->name,
@@ -548,17 +547,9 @@ class PosController extends Controller
                 'size' => $child->sizes,
                 'price' => $child->regular_price,
                 'salePrice' => $child->sale_price ?? 0,
+                'quantity' => $child->quantity,
             ]);
-        } else if ($quantity == 0) {
-            return response()->json([
-                'product_id' => $parent->id,
-                'name' => $parent->name,
-                'child_id' => $child->id,
-                'barcode' => $child->barcode,
-                'size' => $child->sizes,
-                'price' => $child->regular_price * -1,
-            ]);
-        } {
+         {
             return response()->json([
                 'message' => 'Out of stock'
             ], 404);;
@@ -571,170 +562,142 @@ class PosController extends Controller
         return view('pos.print', compact('bill'));
     }
 
-    public function holdBill(Request $request)
-    {
-        DB::beginTransaction();
-        try {
-            // استخدام bill_number المرسل أو إنشاء جديد
-            $billNumber = $request->input('bill_number') ?? 'BILL-' . time() . '-' . rand(1000, 9999);
+   public function holdBill(Request $request)
+{
+    DB::beginTransaction();
+    try {
+        // استخدام bill_number المرسل أو إنشاء جديد
+        $billNumber = $request->input('bill_number') ?? 'BILL-' . time() . '-' . rand(1000, 9999);
 
-            // جلب الفاتورة إذا موجودة
-            $bill = Bill::where('bill_number', $billNumber)->first();
+        // جلب الفاتورة إذا موجودة
+        $bill = Bill::where('bill_number', $billNumber)->first();
 
-            if ($bill) {
-                // تحديث بيانات الفاتورة الأساسية
-                $bill->update([
-                    'total_price' => $request->total_price,
-                    'total_items' => collect($request->products)->sum(fn($p) => $p['quantity'] ?? 1),
-                    'name' => $request->customerName,
-                    'phone_number' => $request->phoneNumber,
-                    'reference' => $request->reference,
-                    'status' => $request->status ?? $bill->status,
-                    'employee_name' => $request->employee,
-                ]);
+        if ($bill) {
+            // تحديث بيانات الفاتورة الأساسية
+            $bill->update([
+                'total_price' => $request->total_price,
+                'total_items' => collect($request->products)->sum(fn($p) => $p['quantity'] ?? 1),
+                'name' => $request->name,
+                'phone_number' => $request->phone_number,
+                'reference' => $request->reference,
+                'status' => $request->status ?? $bill->status,
+                'employee_name' => $request->employee,
+            ]);
 
-                // جلب العناصر الحالية بالفاتورة
-                $existingItems = $bill->billItems()->get()->keyBy(fn($item) => $item->product_id . '-' . $item->child_id);
-                $newProducts = collect($request->products)->keyBy(fn($p) => $p['product_id'] . '-' . $p['child_id']);
+            // جلب العناصر الحالية بالفاتورة
+            $existingItems = $bill->billItems()->get()->keyBy(fn($item) => $item->product_id . '-' . $item->child_id);
+            $newProducts = collect($request->products)->keyBy(fn($p) => $p['product_id'] . '-' . $p['child_id']);
 
-                // حذف المنتجات المحذوفة
-                $removedKeys = $existingItems->keys()->diff($newProducts->keys());
+            // IDs للـ child و parent من العناصر الحالية والجديدة
+            $allChildIds = $existingItems->pluck('child_id')->merge($newProducts->pluck('child_id'))->filter()->unique();
+            $allProductIds = $existingItems->pluck('product_id')->merge($newProducts->pluck('product_id'))->filter()->unique();
 
-                // جمع IDs للـ child و parent من العناصر الحالية بالفاتورة
-                $childIdsInBill = $existingItems->pluck('child_id')->filter()->unique();
-                $productIdsInBill = $existingItems->pluck('product_id')->filter()->unique();
+            $childProducts = Product::whereIn('id', $allChildIds)->get()->keyBy('id');
+            $parentProducts = Product::whereIn('id', $allProductIds)->get()->keyBy('id');
 
-                // جلب كل الـ child و parent products من قاعدة البيانات
-                $childProducts = Product::whereIn('id', $childIdsInBill)->get()->keyBy('id');
-                $parentProducts = Product::whereIn('id', $productIdsInBill)->get()->keyBy('id');
+            // حذف المنتجات المحذوفة
+            $removedKeys = $existingItems->keys()->diff($newProducts->keys());
+            foreach ($removedKeys as $key) {
+                $item = $existingItems->get($key);
+                $qty = $item->quantity ?? 1;
 
-                // معالجة العناصر المحذوفة
-                foreach ($removedKeys as $key) {
-                    $item = $existingItems->get($key);
-                    if ($item) {
-                        $qty = $item->quantity ?? 1;
-                        $child = $childProducts->get($item->child_id);
-                        $parent = $parentProducts->get($item->product_id);
+                // رجّع المخزون
+                $child = $childProducts->get($item->child_id);
+                $parent = $parentProducts->get($item->product_id);
+                if ($child) { $child->quantity += $qty; $child->save(); }
+                if ($parent) { $parent->quantity += $qty; $parent->save(); }
 
-                        // زيادة كمية الـ child و parent عند حذف العنصر
-                        if ($child) {
-                            $child->quantity += $qty;
-                            $child->save();
-                        }
-                        if ($parent) {
-                            $parent->quantity += $qty;
-                            $parent->save();
-                        }
+                $item->delete();
+            }
 
-                        $item->delete();
-                    }
-                }
+            // معالجة العناصر الجديدة والمعدلة
+            foreach ($newProducts as $key => $prod) {
+                $qty = $prod['quantity'] ?? 1;
+                $price = $prod['price'];
+                $child = $childProducts->get($prod['child_id']);
+                $parent = $parentProducts->get($prod['product_id']);
 
-                //            foreach ($newProducts as $key => $prod) {
-                //     $existingItem = $existingItems->get($key);
-                //     $qty = $prod['quantity'] ?? 1;
+                if ($existingItems->has($key)) {
+                    // عنصر موجود → احسب الفرق وعدل المخزون
+                    $existingItem = $existingItems->get($key);
+                    $oldQty = $existingItem->quantity ?? 1;
+                    $diff = $qty - $oldQty;
 
-                // $child = $childProducts->get($prod['child_id']);
-                // $parent = $parentProducts->get($prod['product_id']);
-
-
-                //     if ($existingItem) {
-                //         $oldQty = $existingItem->quantity ?? 1;
-                //         $diff = $qty - $oldQty;
-
-                //         // تحديث الفاتورة
-                //         $existingItem->update([
-                //             'price' => $prod['price'],
-                //             'quantity' => $qty,
-                //         ]);
-
-                //         // تعديل كمية الـ child حسب الفرق
-                //         if ($child && $diff != 0) {
-                //             $child->quantity = max(0, $child->quantity - $diff);
-                //             $child->save();
-                //         }
-
-                //         // تعديل كمية الـ parent حسب الفرق
-                //         if ($parent && $diff != 0) {
-                //             $parent->quantity = max(0, $parent->quantity - $diff);
-                //             $parent->save();
-                //         }
-                //     } else {
-                //         // عنصر جديد بالفاتورة
-                //         $bill->billItems()->create([
-                //             'product_id' => $prod['product_id'],
-                //             'child_id' => $prod['child_id'] ?? null,
-                //             'quantity' => $qty,
-                //             'price' => $prod['price'],
-                //         ]);
-
-                //         // خصم الكمية من الـ child و parent
-                //         if ($child) {
-                //             $child->quantity = max(0, $child->quantity - $qty);
-                //             $child->save();
-                //         }
-                //         if ($parent) {
-                //             $parent->quantity = max(0, $parent->quantity - $qty);
-                //             $parent->save();
-                //         }
-                //     }
-                // }
-
-            } else {
-                // إنشاء فاتورة جديدة
-                $bill = Bill::create([
-                    'bill_number' => $billNumber,
-                    'name' => $request->name,
-                    'phone_number' => $request->phone_number,
-                    'reference' => $request->reference,
-                    'status' => $request->status ?? 'unpaid',
-                    'total_price' => $request->total_price,
-                    'payment_method' => 'cash',
-                    'employee_name' => $request->employee,
-                    'total_items' => collect($request->products)->sum(fn($p) => $p['quantity'] ?? 1),
-                    'user_id' => Auth::id() ?? 5,
-                ]);
-
-                $productIds = collect($request->products)->pluck('product_id');
-                $childIds = collect($request->products)->pluck('child_id');
-                $childProducts = Product::whereIn('id', $childIds)->get()->keyBy('id');
-                $parentProducts = Product::whereIn('id', $productIds)->get()->keyBy('id');
-
-                foreach ($request->products as $prod) {
-                    $qty = $prod['quantity'] ?? 1;
-
-                    $bill->billItems()->create([
-                        'product_id' => $prod['product_id'],
-                        'child_id' => $prod['child_id'] ?? null,
-                        'price' => $prod['price'],
+                    $existingItem->update([
+                        'price' => $price,
                         'quantity' => $qty,
                     ]);
 
-                    $child = $childProducts[$prod['child_id']] ?? null;
-                    $parent = $parentProducts[$prod['product_id']] ?? null;
+                    if ($diff != 0) {
+                        if ($child) { $child->quantity = max(0, $child->quantity - $diff); $child->save(); }
+                        if ($parent) { $parent->quantity = max(0, $parent->quantity - $diff); $parent->save(); }
+                    }
 
-                    if ($child) {
-                        $child->quantity = max(0, $child->quantity - $qty);
-                        $child->save();
-                    }
-                    if ($parent) {
-                        $parent->quantity = max(0, $parent->quantity - $qty);
-                        $parent->save();
-                    }
+                } else {
+                    // عنصر جديد → خصم المخزون
+                    $bill->billItems()->create([
+                        'product_id' => $prod['product_id'],
+                        'child_id' => $prod['child_id'] ?? null,
+                        'price' => $price,
+                        'quantity' => $qty,
+                    ]);
+
+                    if ($child) { $child->quantity = max(0, $child->quantity - $qty); $child->save(); }
+                    if ($parent) { $parent->quantity = max(0, $parent->quantity - $qty); $parent->save(); }
                 }
             }
 
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'bill' => $bill->load('billItems'),
+        } else {
+            // إنشاء فاتورة جديدة
+            $bill = Bill::create([
+                'bill_number' => $billNumber,
+                'name' => $request->name,
+                'phone_number' => $request->phone_number,
+                'reference' => $request->reference,
+                'status' => $request->status ?? 'unpaid',
+                'total_price' => $request->total_price,
+                'payment_method' => 'cash',
+                'employee_name' => $request->employee,
+                'total_items' => collect($request->products)->sum(fn($p) => $p['quantity'] ?? 1),
+                'user_id' => Auth::id() ?? 5,
             ]);
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json(['error' => $e->getMessage()], 500);
+
+            $productIds = collect($request->products)->pluck('product_id');
+            $childIds = collect($request->products)->pluck('child_id');
+            $childProducts = Product::whereIn('id', $childIds)->get()->keyBy('id');
+            $parentProducts = Product::whereIn('id', $productIds)->get()->keyBy('id');
+
+            foreach ($request->products as $prod) {
+                $qty = $prod['quantity'] ?? 1;
+
+                $bill->billItems()->create([
+                    'product_id' => $prod['product_id'],
+                    'child_id' => $prod['child_id'] ?? null,
+                    'price' => $prod['price'],
+                    'quantity' => $qty,
+                ]);
+
+                $child = $childProducts[$prod['child_id']] ?? null;
+                $parent = $parentProducts[$prod['product_id']] ?? null;
+
+                if ($child) { $child->quantity = max(0, $child->quantity - $qty); $child->save(); }
+                if ($parent) { $parent->quantity = max(0, $parent->quantity - $qty); $parent->save(); }
+            }
         }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'bill' => $bill->load('billItems'),
+        ]);
+
+    } catch (\Exception $e) {
+        DB::rollback();
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
+
 
 
 
@@ -805,128 +768,123 @@ class PosController extends Controller
     }
 
 
-    public function saveBill(Request $request)
-    {
-        DB::beginTransaction();
-        try {
-            // نحاول العثور على الفاتورة بحسب bill_number المرسل
-            $billNumber = $request->input('bill_number') ?? $request->input('products.0.bill_number');
-            $bill = Bill::where('bill_number', $billNumber)->first();
-            // إذا لم توجد الفاتورة، نرجع خطأ مع rollback
-            if (!$bill) {
-                DB::rollBack();
-                return response()->json(['error' => 'Bill not found.'], 404);
-            }
+   public function saveBill(Request $request)
+{
+    DB::beginTransaction();
+    try {
+        // الحصول على رقم الفاتورة
+        $billNumber = $request->input('bill_number');
+        $bill = Bill::where('bill_number', $billNumber)->first();
 
-            // تحديث بيانات الفاتورة الأساسية
-            $bill->update([
-                'total_price' => $request->total_price,
-                'total_items' => collect($request->products)->sum(fn($prod) => $prod['quantity'] ?? 1),
-            ]);
+        if (!$bill) {
+            DB::rollBack();
+            return response()->json(['error' => 'Bill not found.'], 404);
+        }
 
-            // المنتجات الحالية في الفاتورة
-            $existingItems = $bill->billItems()->get()->keyBy(fn($item) => $item->product_id . '-' . $item->child_id);
+        // تحديث بيانات الفاتورة الأساسية مع الاسم ورقم الهاتف
+        $bill->update([
+            'total_price' => $request->total_price,
+            'total_items' => collect($request->products)->sum(fn($prod) => $prod['quantity'] ?? 1),
+            'name' => $request->name ?? null,
+            'phone_number' => $request->phone_number ?? null,
+        ]);
 
-            // المنتجات الجديدة من الريكوست
-            $newProducts = collect($request->products)->keyBy(fn($prod) => $prod['product_id'] . '-' . $prod['child_id']);
+        // المنتجات الحالية في الفاتورة
+        $existingItems = $bill->billItems()->get()->keyBy(fn($item) => $item->product_id . '-' . ($item->child_id ?? 0));
 
-            // المنتجات المحذوفة
-            $removedKeys = $existingItems->keys()->diff($newProducts->keys());
+        // المنتجات الجديدة من الريكوست
+        $newProducts = collect($request->products)->keyBy(fn($prod) => $prod['product_id'] . '-' . ($prod['child_id'] ?? 0));
 
-            foreach ($removedKeys as $key) {
-                $item = $existingItems->get($key);
-                if ($item) {
-                    $quantityToRestore = $item->quantity ?? 1;
+        // المنتجات المحذوفة
+        $removedKeys = $existingItems->keys()->diff($newProducts->keys());
 
-                    // استرجاع الكمية عند حذف أو تقليل المنتج
-                    $parent = Product::find($item->product_id);
+        foreach ($removedKeys as $key) {
+            $item = $existingItems->get($key);
+            if ($item) {
+                $quantityToRestore = $item->quantity ?? 1;
+                $parent = Product::find($item->product_id);
 
-                    if ($parent) {
-                        // استرجاع للطفل إذا موجود
-                        if ($item->child_id) {
-                            $child = $parent->children()->find($item->child_id);
-                            if ($child) {
-                                $child->quantity += $quantityToRestore; // زيادة كمية الطفل
-                                $child->save();
-                            }
+                if ($parent) {
+                    if ($item->child_id) {
+                        $child = $parent->children()->find($item->child_id);
+                        if ($child) {
+                            $child->quantity += $quantityToRestore;
+                            $child->save();
                         }
-
-                        // استرجاع للبارنت
+                    } else {
                         $parent->quantity += $quantityToRestore;
                         $parent->save();
                     }
-
-                    // حذف العنصر
-                    $item->delete();
                 }
+
+                $item->delete();
             }
+        }
 
-            // تحديث أو إنشاء المنتجات الجديدة/المعدلة
-            foreach ($newProducts as $key => $prod) {
-                $existingItem = $existingItems->get($key);
-                $newQuantity = $prod['quantity'] ?? 1;
+        // تحديث أو إنشاء المنتجات الجديدة/المعدلة
+        foreach ($newProducts as $key => $prod) {
+            $existingItem = $existingItems->get($key);
+            $newQuantity = $prod['quantity'] ?? 1;
 
-                if ($existingItem) {
-                    $oldQuantity = $existingItem->quantity ?? 1;
-                    $quantityDiff = $newQuantity - $oldQuantity;
+            if ($existingItem) {
+                $oldQuantity = $existingItem->quantity ?? 1;
+                $quantityDiff = $newQuantity - $oldQuantity;
 
-                    $existingItem->update([
-                        'price' => $prod['price'],
-                        'quantity' => $newQuantity,
-                    ]);
+                $existingItem->update([
+                    'price' => $prod['price'],
+                    'quantity' => $newQuantity,
+                ]);
 
-                    if ($quantityDiff != 0) {
-                        if (!empty($prod['child_id'])) {
-                            $child = Product::find($prod['child_id']);
-                            if ($child) {
-                                $child->quantity = max(0, $child->quantity - $quantityDiff);
-                                $child->save();
-                            }
-                        }
-
-                        $parent = Product::find($prod['product_id']);
-                        if ($parent) {
-                            $parent->quantity = max(0, $parent->quantity - $quantityDiff);
-                            $parent->save();
-                        }
-                    }
-                } else {
-                    BillItem::create([
-                        'bill_id' => $bill->id,
-                        'product_id' => $prod['product_id'],
-                        'child_id' => $prod['child_id'],
-                        'price' => $prod['price'],
-                        'quantity' => $newQuantity,
-                    ]);
-
-                    if (!empty($prod['child_id'])) {
-                        $child = Product::find($prod['child_id']);
+                if ($quantityDiff != 0) {
+                    $parent = Product::find($prod['product_id']);
+                    if (!empty($prod['child_id']) && $parent) {
+                        $child = $parent->children()->find($prod['child_id']);
                         if ($child) {
-                            $child->quantity = max(0, $child->quantity - $newQuantity);
+                            $child->quantity = max(0, $child->quantity - $quantityDiff);
                             $child->save();
                         }
-                    }
-
-                    $parent = Product::find($prod['product_id']);
-                    if ($parent) {
-                        $parent->quantity = max(0, $parent->quantity - $newQuantity);
+                    } elseif ($parent) {
+                        $parent->quantity = max(0, $parent->quantity - $quantityDiff);
                         $parent->save();
                     }
                 }
+            } else {
+                BillItem::create([
+                    'bill_id' => $bill->id,
+                    'product_id' => $prod['product_id'],
+                    'child_id' => $prod['child_id'] ?? null,
+                    'price' => $prod['price'],
+                    'quantity' => $newQuantity,
+                ]);
+
+                $parent = Product::find($prod['product_id']);
+                if (!empty($prod['child_id']) && $parent) {
+                    $child = $parent->children()->find($prod['child_id']);
+                    if ($child) {
+                        $child->quantity = max(0, $child->quantity - $newQuantity);
+                        $child->save();
+                    }
+                } elseif ($parent) {
+                    $parent->quantity = max(0, $parent->quantity - $newQuantity);
+                    $parent->save();
+                }
             }
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'bill' => $bill,
-                'products' => $request->products,
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
         }
+
+        DB::commit();
+
+        // بعد الحفظ، ارجع مباشرة للداشبورد (pos.index)
+        return response()->json([
+            'success' => true,
+            'message' => 'Bill saved successfully',
+            'redirect' => route('pos.index'),
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
+
 
 
     public function checkoutSaved(Request $request)
@@ -988,7 +946,9 @@ class PosController extends Controller
     public function delete_bill($id)
     {
         $bill = Bill::find($id);
-        $bill->delete();
+        if($bill->total_price <= 0){
+        $bill->delete();}
+
         return redirect()->route('pos.bills')->with('status', 'Record has been deleted successfully !');
     }
 
