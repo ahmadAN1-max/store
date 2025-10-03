@@ -12,11 +12,11 @@ class ShopController extends Controller
     public function index(Request $request)
     {
         $productsQuery = Product::where('parent', true)
-    ->whereNotNull('image')       // الصورة موجودة
-    ->where('image', '!=', '')
-    ->where('featured', 1);   // الصورة مش فاضية
+            ->whereNotNull('image')       // الصورة موجودة
+            ->where('image', '!=', '')
+            ->where('featured', 1);       // الصورة مش فاضية
 
-
+        // فلترة حسب الكاتيجوري
         if ($request->filled('category')) {
             $categoryParam = $request->category;
 
@@ -28,6 +28,8 @@ class ShopController extends Controller
                 }
             });
         }
+
+        // فلترة حسب البراند
         if ($request->filled('brand')) {
             $brandParam = $request->brand;
 
@@ -40,26 +42,21 @@ class ShopController extends Controller
             });
         }
 
-        // إذا كان فيه طلب exclusive → نفس الشي فلترة كاتيغوري
+        // فلترة حسب الـ Exclusive
         if ($request->boolean('exclusive')) {
             $productsQuery->whereHas('categories', function ($q) {
                 $q->where('name', 'Exclusive Website')
-                    ->orWhere('name', 'like', 'Exclusive %');
-                // هيك بيجيب كل الـ sub categories تحت الـ Exclusive
+                  ->orWhere('name', 'like', 'Exclusive %');
             });
         }
 
+        // Pagination مع الاحتفاظ بكل الـ request parameters
         $products = $productsQuery
             ->orderBy('created_at', 'desc')
-            ->paginate(12)
-            ->withQueryString();
+            ->get();
 
         return view('shop', compact('products'));
     }
-
-
-
-
 
     public function product_details($product_slug)
     {
@@ -77,47 +74,46 @@ class ShopController extends Controller
     }
 
     public function categoryProducts($slug, Request $request)
-{
-    $productsQuery = Product::where('parent', true)
-        ->whereNotNull('image')
-        ->where('image', '!=', '')
-        ->where('featured', 1)
-        ->whereHas('categories', function ($q) use ($slug) {
-            $q->where('slug', $slug);
-        });
+    {
+        $productsQuery = Product::where('parent', true)
+            ->whereNotNull('image')
+            ->where('image', '!=', '')
+            ->where('featured', 1)
+            ->whereHas('categories', function ($q) use ($slug) {
+                $q->where('slug', $slug);
+            });
 
-    if ($request->boolean('exclusive')) {
-        $productsQuery->whereHas('categories', function ($q) {
-            $q->where('name', 'Exclusive Website')
-              ->orWhere('name', 'like', 'Exclusive %');
-        });
+        // فلترة Exclusive
+        if ($request->boolean('exclusive')) {
+            $productsQuery->whereHas('categories', function ($q) {
+                $q->where('name', 'Exclusive Website')
+                  ->orWhere('name', 'like', 'Exclusive %');
+            });
+        }
+
+        $category = Category::where('slug', $slug)->firstOrFail();
+
+        $products = $productsQuery
+            ->get();
+
+        return view('shop', compact('products', 'category'));
     }
-
-    // لو حابب تعرض اسم الكاتيجوري في الصفحة
-    $category = \App\Models\Category::where('slug', $slug)->firstOrFail();
-
-    $products = $productsQuery->paginate(12);
-
-    return view('shop', compact('products', 'category'));
-}
 
     public function search(Request $request)
     {
-    $keyword = $request->input('search-keyword');
+        $keyword = $request->input('search-keyword');
 
-    $products = Product::where('parent', 1)
-    ->where('featured', 1)
-    ->whereNotNull('image')        // الصورة موجودة
-    ->where('image', '!=', '')     // الصورة مش فاضية
-    ->where(function($query) use ($keyword) {
-    $query->where('name', 'LIKE', "%{$keyword}%")
-        ->orWhere('short_description', 'LIKE', "%{$keyword}%")
-        ->orWhere('description', 'LIKE', "%{$keyword}%");
-    })
-    ->take(10)
-    ->get();
-    // إذا الصفحة عادية
-    return view('shop', compact('products'));
-}
+        $products = Product::where('parent', 1)
+            ->where('featured', 1)
+            ->whereNotNull('image')
+            ->where('image', '!=', '')
+            ->where(function($query) use ($keyword) {
+                $query->where('name', 'LIKE', "%{$keyword}%")
+                      ->orWhere('short_description', 'LIKE', "%{$keyword}%")
+                      ->orWhere('description', 'LIKE', "%{$keyword}%");
+            })
+            ->get();
 
+        return view('shop', compact('products'));
+    }
 }

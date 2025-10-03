@@ -281,7 +281,6 @@ class PosController extends Controller
             'brand_id' => 'required',
             'regular_price' => 'required',
             'SKU' => 'required',
-            'stock_status' => 'required',
             'quantity' => 'required',
             'size_barcodes' => 'nullable|string',
 
@@ -303,11 +302,11 @@ class PosController extends Controller
         $parentProduct->regular_price = $request->regular_price;
         $parentProduct->sale_price = $request->sale_price;
         $parentProduct->SKU = $request->SKU;
-        $parentProduct->stock_status = $request->stock_status;
+        $parentProduct->stock_status = $request->stock_status ?? 'instock';
         $parentProduct->featured = $request->featured;
         $parentProduct->quantity = $request->quantity;
         $parentProduct->sizes = '';
-        $parentProduct->store = 'SP';
+        $parentProduct->store = $request->store;
         $parentProduct->parent = true;
         $parentProduct->parent_id = null;
 
@@ -340,12 +339,12 @@ class PosController extends Controller
                     $childProduct->sale_price = $request->sale_price;
                     $childProduct->SKU = $request->SKU . '-' . strtoupper($size);
                     $childProduct->unit_cost = $request->unit_cost;
-                    $childProduct->stock_status = $request->stock_status;
+                    $childProduct->stock_status = $request->stock_status ?? 'instock';
                     $childProduct->featured = $request->featured;
                     $childProduct->quantity = $request->quantity;
                     $childProduct->sizes = $size;
                     $childProduct->parent = false;
-                    $childProduct->store = 'SP';
+                    $childProduct->store = $request->store;
                     $childProduct->parent_id = $parentProduct->id;
                     $childProduct->brand_id = $request->brand_id;
                     $childProduct->image = $parentProduct->image;
@@ -387,7 +386,6 @@ class PosController extends Controller
         'brand_id' => 'required',
         'regular_price' => 'required',
         'SKU' => 'required',
-        'stock_status' => 'required',
         'quantity' => 'required',
     ]);
 
@@ -437,12 +435,12 @@ class PosController extends Controller
                 $childProduct->sale_price = $request->sale_price;
                 $childProduct->SKU = $request->SKU . '-' . strtoupper($size);
                 $childProduct->unit_cost = $request->unit_cost;
-                $childProduct->stock_status = $request->stock_status;
+                $childProduct->stock_status = $request->stock_status ?? 'instock';
                 $childProduct->featured = $request->featured;
                 $childProduct->quantity = 0;
                 $childProduct->sizes = $size;
                 $childProduct->parent = false;
-                $childProduct->store = 'SP';
+                $childProduct->store = $request->store;
                 $childProduct->parent_id = $product->id;
                 $childProduct->brand_id = $request->brand_id;
                 $childProduct->image = $product->image;
@@ -472,6 +470,7 @@ class PosController extends Controller
 
         foreach ($request->quantities as $childId => $quantity) {
             $child = Product::find($childId);
+            $child->store = $request->store;
             if ($child && $child->parent_id == $product->id) {
                 $child->quantity = $quantity;
 
@@ -505,8 +504,9 @@ class PosController extends Controller
     $product->regular_price = $request->regular_price;
     $product->sale_price = $request->sale_price;
     $product->SKU = $request->SKU;
-    $product->stock_status = $request->stock_status;
+    $product->stock_status = $request->stock_status ?? 'instock';
     $product->featured = 0;
+    $product->store = $request->store;
     $product->categories()->sync($request->category_id);
     $product->brand_id = $request->brand_id;
     $product->save();

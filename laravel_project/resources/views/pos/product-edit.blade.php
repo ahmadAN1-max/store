@@ -16,7 +16,7 @@
                         <li>
                             <i class="icon-chevron-right"></i>
                         </li>
-                        <li>
+                        <li> 
                             <a href="{{ route('pos.products') }}">
                                 <div class="text-tiny">Products</div>
                             </a>
@@ -173,19 +173,19 @@
 
                         </div>
                         <div class="cols gap22">
-                            <fieldset class="name">
-                                <div class="body-title mb-10">Stock</div>
-                                <div class="select mb-10">
-                                    <select class="" name="stock_status">
-                                        <option value="instock"
-                                            {{ $product->stock_status == 'instock' ? 'Selected' : '' }}>
-                                            InStock</option>
-                                        <option value="outofstock"
-                                            {{ $product->stock_status == 'outofstock' ? 'Selected' : '' }}>Out of Stock
-                                        </option>
-                                    </select>
-                                </div>
-                            </fieldset>
+
+                       <fieldset class="name">
+    <div class="body-title mb-10">Store</div>
+    <div class="select mb-10">
+        <select name="store">
+            <option value="SP" {{ $product->store == 'SP' ? 'selected' : '' }}>SP</option>
+            <option value="Luxe" {{ $product->store == 'Luxe' ? 'selected' : '' }}>Luxe</option>
+            <option value="Both" {{ $product->store == 'Both' ? 'selected' : '' }}>Both</option>
+        </select>
+    </div>
+</fieldset>
+
+                        
                             <fieldset class="name">
                                 <div class="body-title mb-10">Quantity <span class="tf-color-1"></span></div>
                                 <input class="mb-10" type="text" placeholder="Enter quantity" name="quantity"

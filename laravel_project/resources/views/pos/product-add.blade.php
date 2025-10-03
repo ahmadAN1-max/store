@@ -113,7 +113,7 @@
                         </fieldset>
                         @error('sizes')
                             <span class="alert alert-danger text-center">{{ $message }}</span>
-                        @enderror
+                        @enderror 
                     </div>
                     <div class="wg-box">
                         <div class="cols gap22">
@@ -161,15 +161,16 @@
                         </div>
                         <div class="cols gap22">
                             <fieldset class="name">
-                                <div class="body-title mb-10">Stock</div>
+                                <div class="body-title mb-10">Store</div>
                                 <div class="select mb-10">
-                                    <select class="" name="stock_status">
-                                        <option value="instock">InStock</option>
-                                        <option value="outofstock">Out of Stock</option>
+                                    <select class="" name="store">
+                                        <option value="SP">SP</option>
+                                        <option value="Luxe">Luxe</option>
+                                        <option value="Both">Both</option>
                                     </select>
                                 </div>
                             </fieldset>
-                            @error('stock_status')
+                            @error('store')
                                 <span class="alert alert-danger text-center">{{ $message }}</span>
                             @enderror
                             <fieldset class="name">

@@ -66,7 +66,8 @@
                     @php
                         $sizesString = $product->children->pluck('sizes')->implode(',');
                     @endphp
-                    <div class="col-md-3 product-card" data-sizes="{{ $sizesString }}">
+                    <div class="col-6 col-md-3 product-card" data-sizes="{{ $sizesString }}">
+
                         <div class=" h-100">
 
                             {{-- Product Images --}}
@@ -205,6 +206,7 @@
                     </div>
                 
             @endforeach
+        
         </div>
 
     </div>

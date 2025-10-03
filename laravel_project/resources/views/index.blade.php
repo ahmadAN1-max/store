@@ -289,39 +289,71 @@ use Illuminate\Support\Str;
             </section>
 
             <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
+<style>
+.circle-img {
+    width: 100%;        /* يأخذ كامل عرض العمود */
+    max-width: 450px;   /* أقصى حجم على الديسكتوب */
+    aspect-ratio: 1/1;  /* يحافظ على دائري */
+    border-radius: 50%;
+    object-fit: cover;  /* يغطي المساحة بدون تشويه */
+    display: block;
+    margin: 0 auto;
+}
 
-            <section class="category-banner container">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="category-banner__item border-radius-10 mb-5">
-                            <img loading="lazy" class="img-fluid w-100"
-                                src="{{ asset('images/home/new collection.jpg') }}" alt="New Collection"
-                                style="border-radius:50%; height: 665px; object-fit: cover;" />
+/* Responsive للموبايل */
+@media (max-width: 768px) {
+    .circle-img {
+        max-width: 250px; /* حجم أصغر على الموبايل */
+    }
+}
 
+</style>
+           <section class="category-banner container my-5">
+    <div class="row g-4 justify-content-center">
 
-                            <div class="category-banner__item-content" style="border: 1px solid black;">
-                                <h3 class="mb-0">Accessories</h3>
-                                <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Accessories')]) }}"
-                                    class="btn-link default-underline text-uppercase fw-medium">Shop Now</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="category-banner__item border-radius-10 mb-5">
-                            <img loading="lazy" class="img-fluid w-100" src="{{ asset('images/home/daily deals.jpg') }}"
-                                style="border-radius:50%; height: 665px; object-fit: cover;" alt="sale collection" />
-                            <div class="category-banner__item-mark">
-                                Hot Deals
-                            </div>
-                            <div class="category-banner__item-content" style="border: 1px solid black;">
-                                <h3 class="mb-0">Spring-Summer Specials</h3>
-                                <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('sale')]) }}"
-                                    class="btn-link default-underline text-uppercase fw-medium">Shop Now</a>v 
-                            </div>
-                        </div>
-                    </div>
+        <!-- أول صورة -->
+        <div class="col-12 col-md-6 text-center">
+            <div class="category-banner__item mb-5">
+                <img loading="lazy"
+                     src="{{ asset('images/home/new collection.jpg') }}"
+                     alt="New Collection"
+                     class="circle-img" />
+
+                <div class="category-banner__item-content mt-3 p-2" style="border: 1px solid black; border-radius: 8px;">
+                    <h3 class="mb-0">Accessories</h3>
+                    <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Accessories')]) }}"
+                       class="btn-link default-underline text-uppercase fw-medium">
+                       Shop Now
+                    </a>
                 </div>
-            </section>
+            </div>
+        </div>
+
+        <!-- ثاني صورة -->
+        <div class="col-12 col-md-6 text-center">
+            <div class="category-banner__item mb-5 position-relative">
+                <img loading="lazy"
+                     src="{{ asset('images/home/daily deals.jpg') }}"
+                     alt="Sale Collection"
+                     class="circle-img" />
+
+                <div class="category-banner__item-mark position-absolute top-0 start-50 translate-middle-x badge bg-danger">
+                    Hot Deals
+                </div>
+
+                <div class="category-banner__item-content mt-3 p-2" style="border: 1px solid black; border-radius: 8px;">
+                    <h3 class="mb-0">Spring-Summer Specials</h3>
+                    <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('sale')]) }}"
+                       class="btn-link default-underline text-uppercase fw-medium">
+                       Shop Now
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
 
             <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
 

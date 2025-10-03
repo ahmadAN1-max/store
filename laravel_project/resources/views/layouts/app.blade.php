@@ -2,16 +2,15 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
-<?
+@php
 use Illuminate\Support\Str;
-?>
+@endphp
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>@yield('title', 'SP') - Sarah's Palace </title>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <meta name="author" content="Sarah's Palace" />
     <link rel="shortcut icon" href="{{ asset('images/favicon.ico') }}" />
@@ -25,10 +24,10 @@ use Illuminate\Support\Str;
     <link rel="stylesheet" href="{{ asset('assets/css/plugins/swiper.min.css') }}" type="text/css" />
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}" type="text/css" />
     <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}" type="text/css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css')}}"
-        integrity="sha512-SfTiTlX6kk+qitfevl/7LibUOeJWlt9rbyDn92a1DqWOw9vWG2MFoays0sgObmWazO5BQPiFucnnEAjpAB+/Sw=="
-        crossorigin="anonymous" referrerpolicy="no-referrer">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+      integrity="sha512-SfTiTlX6kk+qitfevl/7LibUOeJWlt9rbyDn92a1DqWOw9vWG2MFoays0sgObmWazO5BQPiFucnnEAjpAB+/Sw=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+
     <style>
         .navigation__item {
             position: relative;
@@ -1062,7 +1061,12 @@ use Illuminate\Support\Str;
         <div id="scrollTop" class="visually-hidden end-0"></div>
         <div class="page-overlay"></div>
 
-        <script src="{{ asset('assets/js/plugins/jquery.min.js') }}"></script>
+        <script src="{{ asset('assets/js/plugins/jquery.min.js') }}">
+        document.querySelector('.btn-close-lg').addEventListener('click', function() {
+    document.querySelector('.header-mobile__navigation').classList.remove('show'); 
+});
+
+        </script>
         <script src="{{ asset('assets/js/plugins/bootstrap.bundle.min.js') }}"></script>
         <script src="{{ asset('assets/js/plugins/bootstrap-slider.min.js') }}"></script>
         <script src="{{ asset('assets/js/plugins/swiper.min.js') }}"></script>

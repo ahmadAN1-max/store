@@ -204,17 +204,27 @@
                         <tbody>
                             @foreach ($products as $product)
                                 <tr>
-                                    <td class="pname">
-                                        @if($product->image)
-                                            <div class="image">
-                                                <img src="{{ asset('uploads/products/thumbnails/'.$product->image) }}" alt="product">
-                                            </div>
-                                        @endif
-                                        <div class="name">
-                                            <a href="#" class="body-title-2">{{ $product->name }}</a>
-                                            <div class="text-tiny mt-1">{{ $product->slug }}</div>
-                                        </div>
-                                    </td>
+                                    <td class="pname" style="max-width: 180px;">
+
+    @if($product->image)
+        <div class="image" style="display:inline-block; vertical-align:middle; margin-right:8px;">
+            <img src="{{ asset('uploads/products/thumbnails/'.$product->image) }}" 
+                 alt="product" 
+                 style="width:50px; height:50px; object-fit:cover; border-radius:4px;">
+        </div>
+    @endif
+
+    <div class="name" style="display:inline-block; max-width:120px; vertical-align:middle; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+        <a href="#" class="body-title-2" title="{{ $product->name }}">
+            {{ $product->name }}
+        </a>
+        <div class="text-tiny mt-1" title="{{ $product->slug }}">
+            {{ $product->slug }}
+        </div>
+    </div>
+
+</td>
+
                                     <td>${{ $product->regular_price }}</td>
                                     <td>${{ $product->sale_price }}</td>
                                     <td>{{ $product->SKU }}</td>
