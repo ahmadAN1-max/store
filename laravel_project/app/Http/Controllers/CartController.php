@@ -13,6 +13,7 @@ use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Surfsidemedia\Shoppingcart\Facades\Cart;
+use Illuminate\Support\Facades\DB; 
 
 class CartController extends Controller
 {
@@ -136,84 +137,120 @@ class CartController extends Controller
         return view('cart.checkout');
     }
 
-    public function place_order(Request $request)
-    {
-        $deliveryCharge = Setting::where('key', 'delivery_charge')->value('value') ?? 0;
+   public function place_order(Request $request)
+{
+    $deliveryCharge = Setting::where('key', 'delivery_charge')->value('value') ?? 0;
 
-        if (!Auth::check()) {
-            $request->validate([
-                'name' => 'required|string',
-                'phone' => 'string',
-                'city' => 'required|string',
-                'address' => 'required|string',
-            ]);
-        }
-
-        $user_id = null;
-        $user_name = $request->name;
-        $phone =  $request->phone;
-        $city = $request->city;
-        $address_txt = $request->address;
-
-        $this->setAmountForCheckout();
-
-        $order = new Order();
-        $order->user_id = Auth::check() ? Auth::id() : null;
-        $order->name = $user_name;
-        $order->subtotal = $request->subtotal;
-        $order->discount = $request->discount ?? 0;
-        $order->tax = 0;
-        $order->total = $request->subtotal?? 0 + $deliveryCharge;
-        $order->phone = $address->phone ?? $phone;
-        $order->city = $address->city ?? $city ?? '';
-        $order->address = $address->address ?? $address_txt ?? '';
-        $order->locality = $address->locality ?? '';
-        $order->state = $address->state ?? '';
-        $order->country = $address->country ?? '';
-        $order->landmark = $address->landmark ?? '';
-        $order->zip = $address->zip ?? '';
-        $order->save();
-
-        foreach (Cart::instance('cart')->content() as $item) {
-            $orderItem = new OrderItem();
-            $orderItem->product_id = $item->id;
-            $orderItem->order_id = $order->id;
-            $orderItem->price = $item->price;
-            $orderItem->quantity = $item->qty;
-            $orderItem->size = $item->options->size ?? null;
-            $orderItem->save();
-
-            $childProduct = Product::where('parent_id', $item->id)
-                ->where('sizes', $item->options->size)
-                ->first();
-
-            if ($childProduct) {
-                $childProduct->quantity -= $item->qty;
-                $childProduct->quantity = max($childProduct->quantity, 0);
-                $childProduct->save();
-            }
-
-            $parentProduct = Product::find($item->id);
-            if ($parentProduct) {
-                $parentProduct->quantity = Product::where('parent_id', $parentProduct->id)->sum('quantity');
-                $parentProduct->save();
-            }
-        }
-
-        // $transaction = new Transaction();
-        // $transaction->user_id = $user_id;
-        // $transaction->order_id = $order->id;
-        // $transaction->mode = $request->mode;
-        // $transaction->status = "pending";
-        // $transaction->save();
-
-        Cart::instance('cart')->destroy();
-        session()->forget('checkout');
-        session()->forget('coupon');
-        session()->forget('discounts');
-
-        return redirect()->route('cart.index')->with('order_success', 'Your order is on its way!');
+    if (!Auth::check()) {
+        $request->validate([
+            'name' => 'required|string',
+            'phone' => 'nullable|string',
+            'city' => 'required|string',
+            'address' => 'required|string',
+        ]);
     }
+
+    $user_id = Auth::check() ? Auth::id() : null;
+    $user_name = $request->name;
+    $phone = $request->phone;
+    $city = $request->city;
+    $address_txt = $request->address;
+
+    // تأكد أن السلة ليست فارغة
+    if (Cart::instance('cart')->count() == 0) {
+        return redirect()->route('cart.index')->with('error', 'No items found in cart');
+    }
+
+    // تحضير المبالغ (يمكن استخدام هذا لتأكيد المجموع في الواجهة)
+    $checkoutAmounts = $this->setAmountForCheckout();
+
+    // استخدم معاملة لعمل القفل والتحقق والخصم بشكل ذري
+    try {
+        DB::transaction(function () use ($request, $user_id, $user_name, $phone, $city, $address_txt, $deliveryCharge, $checkoutAmounts) {
+
+            // قبل إنشاء الطلب، تأكد من توفر الكميات لكل عنصر
+            foreach (Cart::instance('cart')->content() as $item) {
+                $childProduct = Product::where('parent_id', $item->id)
+                    ->where('sizes', $item->options->size)
+                    ->lockForUpdate() // قفل الصف لمنع سباق التحديث
+                    ->first();
+
+                if (!$childProduct) {
+                    throw new \Exception("Selected size not available for product: {$item->name}");
+                }
+
+                if ($childProduct->quantity < $item->qty) {
+                    throw new \Exception("Only {$childProduct->quantity} item(s) available for {$item->name} (size: {$item->options->size})");
+                }
+            }
+
+            // كل شيء جاهز — أنشئ الـ Order
+            $order = new Order();
+            $order->user_id = $user_id;
+            $order->name = $user_name;
+            $order->subtotal = $request->subtotal ?? $checkoutAmounts['total'] ?? 0;
+            $order->discount = $request->discount ?? $checkoutAmounts['discount'] ?? 0;
+            $order->tax = 0;
+            $order->total = ($request->subtotal ?? $checkoutAmounts['grand_total'] ?? 0) + $deliveryCharge;
+            $order->phone = $phone ?? '';
+            $order->city = $city ?? '';
+            $order->address = $address_txt ?? '';
+            $order->locality = '';
+            $order->state = '';
+            $order->country = '';
+            $order->landmark = '';
+            $order->zip = '';
+            $order->save();
+
+            // أنشئ عناصر الطلب وخصم الكمية (ضمن نفس المعاملة وبنفس القفل)
+            foreach (Cart::instance('cart')->content() as $item) {
+                $orderItem = new OrderItem();
+                $orderItem->product_id = $item->id;
+                $orderItem->order_id = $order->id;
+                $orderItem->price = $item->price;
+                $orderItem->quantity = $item->qty;
+                $orderItem->size = $item->options->size ?? null;
+                $orderItem->save();
+
+                // جلب الـ child مجدداً بواسطة قفل (نفس القفل لأننا داخل الـ transaction)
+                $childProduct = Product::where('parent_id', $item->id)
+                    ->where('sizes', $item->options->size)
+                    ->lockForUpdate()
+                    ->first();
+
+                // هنا من المفروض أن يكون التأكد تم سابقاً، لكن نضمنه مرة ثانية
+                if ($childProduct && $childProduct->quantity >= $item->qty) {
+                    // خصم الكمية بطريقة ذرية
+                    $childProduct->quantity -= $item->qty;
+                    $childProduct->quantity = max($childProduct->quantity, 0);
+                    $childProduct->save();
+                } else {
+                    throw new \Exception("Insufficient stock for product: {$item->name} (size: {$item->options->size})");
+                }
+
+                // تحديث كمية المنتج الأب بإجمالي كميات الأطفال
+                $parentProduct = Product::find($item->id);
+                if ($parentProduct) {
+                    $parentProduct->quantity = Product::where('parent_id', $parentProduct->id)->sum('quantity');
+                    $parentProduct->save();
+                }
+            }
+
+            // (اختياري) تسجيل معاملة أو غير ذلك هنا
+        }, 5); // المحاولة حتى 5 مرات في حالة حدوث قفل متزامن
+    } catch (\Exception $e) {
+        // في حال أي خطأ داخل المعاملة سيتم rollback تلقائياً — نرجع رسالة للمستخدم
+        return redirect()->route('cart.index')->with('error', $e->getMessage());
+    }
+
+    // نجاح — نظف السلة والجلسات
+    Cart::instance('cart')->destroy();
+    session()->forget('checkout');
+    session()->forget('coupon');
+    session()->forget('discounts');
+
+    return redirect()->route('cart.index')->with('order_success', 'Your order is on its way!');
+}
 
     public function setAmountForCheckout($coupon = null)
     {

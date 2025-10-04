@@ -1,6 +1,6 @@
-<?
-use Illuminate\Support\Str;
-?>
+@php
+    use Illuminate\Support\Str;
+@endphp
 @extends('layouts.app')
 
 @section('content')
@@ -8,20 +8,20 @@ use Illuminate\Support\Str;
 
         <section class="swiper-container js-swiper-slider swiper-number-pagination slideshow"
             data-settings='{
-        "autoplay": {
-          "delay": 5000
-        },
-        "slidesPerView": 1,
-        "effect": "fade",
-        "loop": true
-      }'>
-            <div class="swiper-wrapper">
+                             "autoplay": {
+                             "delay": 5000
+                                },
+                            "slidesPerView": 1,
+                            "effect": "fade",
+                            "loop": true
+                                }'>
+            <div class="swiper-wrapper" style="margin-top:-5%">
                 <div class="swiper-slide">
                     <div class="overflow-hidden position-relative h-100">
                         <div class="slideshow-character position-absolute bottom-0 pos_right-center">
-                            <img loading="lazy" src="{{ asset('images/home/slider1.png') }}" width="800" height="1000"
+                            <img loading="lazy" src="{{ asset('images/home/slider1.png') }}" 
                                 alt="Woman Fashion 1"
-                                class="slideshow-character__img animate animate_fade animate_btt animate_delay-9 w-auto h-auto" />
+                                class="slideshow-character__img animate animate_fade animate_btt animate_delay-9 " />
                             <div class="character_markup type2">
                                 <p
                                     class="text-uppercase font-sofia mark-grey-color animate animate_fade animate_btt animate_delay-10 mb-0">
@@ -93,12 +93,17 @@ use Illuminate\Support\Str;
                 </div>
             </div>
 
-            <div class="container">
-                <div
+            <div class="container" >
+                <div 
                     class="slideshow-pagination slideshow-number-pagination d-flex align-items-center position-absolute bottom-0 mb-5">
                 </div>
             </div>
-        </section>
+        </section> 
+
+<section>
+
+</section>
+
         <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
         <div class="container mw-1620 bg-white border-radius-10">
             <section class="category-carousel container">
@@ -289,70 +294,72 @@ use Illuminate\Support\Str;
             </section>
 
             <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
-<style>
-.circle-img {
-    width: 100%;        /* يأخذ كامل عرض العمود */
-    max-width: 450px;   /* أقصى حجم على الديسكتوب */
-    aspect-ratio: 1/1;  /* يحافظ على دائري */
-    border-radius: 50%;
-    object-fit: cover;  /* يغطي المساحة بدون تشويه */
-    display: block;
-    margin: 0 auto;
-}
+            <style>
+                .circle-img {
+                    width: 100%;
+                    /* يأخذ كامل عرض العمود */
+                    max-width: 450px;
+                    /* أقصى حجم على الديسكتوب */
+                    aspect-ratio: 1/1;
+                    /* يحافظ على دائري */
+                    border-radius: 50%;
+                    object-fit: cover;
+                    /* يغطي المساحة بدون تشويه */
+                    display: block;
+                    margin: 0 auto;
+                }
 
-/* Responsive للموبايل */
-@media (max-width: 768px) {
-    .circle-img {
-        max-width: 250px; /* حجم أصغر على الموبايل */
-    }
-}
+                /* Responsive للموبايل */
+                @media (max-width: 768px) {
+                    .circle-img {
+                        max-width: 250px;
+                        /* حجم أصغر على الموبايل */
+                    }
+                }
+            </style>
+            <section class="category-banner container my-5">
+                <div class="row g-4 justify-content-center">
 
-</style>
-           <section class="category-banner container my-5">
-    <div class="row g-4 justify-content-center">
+                    <!-- أول صورة -->
+                    <div class="col-12 col-md-5 text-center">
+                        <div class="category-banner__item mb-5">
+                            <img loading="lazy" src="{{ asset('images/home/new collection.jpg') }}" alt="New Collection"
+                                class="circle-img" />
 
-        <!-- أول صورة -->
-        <div class="col-12 col-md-6 text-center">
-            <div class="category-banner__item mb-5">
-                <img loading="lazy"
-                     src="{{ asset('images/home/new collection.jpg') }}"
-                     alt="New Collection"
-                     class="circle-img" />
+                            <div class="category-banner__item-content mt-3 p-2"
+                                style="border: 1px solid black; border-radius: 8px;">
+                                <h3 class="mb-0">Accessories</h3>
+                                <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Accessories')]) }}"
+                                    class="btn-link text-uppercase fw-medium">
+                                    Shop Now
+                                </a>
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="category-banner__item-content mt-3 p-2" style="border: 1px solid black; border-radius: 8px;">
-                    <h3 class="mb-0">Accessories</h3>
-                    <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Accessories')]) }}"
-                       class="btn-link default-underline text-uppercase fw-medium">
-                       Shop Now
-                    </a>
-                </div>
-            </div>
-        </div>
+                    <!-- ثاني صورة -->
+                    <div class="col-12 col-md-5 text-center">
+                        <div class="category-banner__item mb-5 position-relative">
+                            <img loading="lazy" src="{{ asset('images/home/daily deals.jpg') }}" alt="Sale Collection"
+                                class="circle-img" />
 
-        <!-- ثاني صورة -->
-        <div class="col-12 col-md-6 text-center">
-            <div class="category-banner__item mb-5 position-relative">
-                <img loading="lazy"
-                     src="{{ asset('images/home/daily deals.jpg') }}"
-                     alt="Sale Collection"
-                     class="circle-img" />
-
-                <div class="category-banner__item-mark position-absolute top-0 start-50 translate-middle-x badge bg-danger">
+                            {{-- <div class="category-banner__item-mark position-absolute top-0 start-50 translate-middle-x badge bg-danger">
                     Hot Deals
-                </div>
+                </div> --}}
 
-                <div class="category-banner__item-content mt-3 p-2" style="border: 1px solid black; border-radius: 8px;">
-                    <h3 class="mb-0">Spring-Summer Specials</h3>
-                    <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('sale')]) }}"
-                       class="btn-link default-underline text-uppercase fw-medium">
-                       Shop Now
-                    </a>
-                </div>
-            </div>
-        </div>
+                            <div class="category-banner__item-content mt-3 p-2"
+                                style="border: 1px solid black; border-radius: 8px;">
+                                <h3 class="mb-0">Special Deals</h3>
+                                <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('sale')]) }}"
+                                    class="btn-link text-uppercase fw-medium">
+                                    Shop Now
+                                </a>
+                            </div>
+                        </div>
+                    </div>
 
-    </div>
-</section>
+                </div>
+            </section>
 
 
             <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>

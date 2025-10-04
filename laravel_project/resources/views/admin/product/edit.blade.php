@@ -53,32 +53,35 @@
                         </fieldset>
                         <div class="gap22 cols">
                             <fieldset class="category">
-    <div class="body-title mb-10">Category <span class="tf-color-1">*</span></div>
-    <div class="category-checkboxes">
-        @foreach ($categories as $category)
-            <div>
-                <label>
-                    <input type="checkbox" name="category_id[]" value="{{ $category->id }}"
-                        {{ $product->categories->contains($category->id) ? 'checked' : '' }}>
-                    {{ $category->name }}
-                </label>
-            </div>
-        @endforeach
-    </div>
-</fieldset>
+                                <div class="body-title mb-10">Category <span class="tf-color-1">*</span></div>
+                                <div class="category-checkboxes">
+                                    @foreach ($categories as $category)
+                                        <div>
+                                            <label>
+                                                <input type="checkbox" name="category_id[]" value="{{ $category->id }}"
+                                                    {{ $product->categories->contains($category->id) ? 'checked' : '' }}>
+                                                {{ $category->name }}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </fieldset>
 
-<style>
-.category-checkboxes {
-    max-height: 150px; /* ارتفاع محدد */
-    overflow-y: auto;  /* يظهر scroll إذا صار في كتير فئات */
-    padding-right: 5px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
-.category-checkboxes div {
-    margin-bottom: 5px;
-}
-</style>
+                            <style>
+                                .category-checkboxes {
+                                    max-height: 150px;
+                                    /* ارتفاع محدد */
+                                    overflow-y: auto;
+                                    /* يظهر scroll إذا صار في كتير فئات */
+                                    padding-right: 5px;
+                                    border: 1px solid #ddd;
+                                    border-radius: 5px;
+                                }
+
+                                .category-checkboxes div {
+                                    margin-bottom: 5px;
+                                }
+                            </style>
 
                             <fieldset class="brand">
                                 <div class="body-title mb-10">Brand <span class="tf-color-1">*</span></div>
@@ -112,7 +115,7 @@
                             <textarea class="mb-10" name="description" placeholder="Description" tabindex="0" aria-required="true">{{ $product->description ? $product->description : ' ' }}</textarea>
                             <div class="text-tiny">Do not exceed 100 characters when entering the product name.</div>
                         </fieldset>
-                        
+
                         <fieldset class="sizes">
                             <div class="body-title mb-10">
                                 Sizes <span class="tf-color-1">*</span>
@@ -166,7 +169,7 @@
                                 @if ($product->image)
                                     <div class="item" id="imgpreview" data-old-image="{{ $product->image }}"
                                         style="display:inline-block; position:relative; margin-bottom:10px;">
-                                        <img src="{{ asset('uploads/products/thumbnails/'. $product->image) }}"
+                                        <img src="{{ asset('uploads/products/thumbnails/' . $product->image) }}"
                                             alt=""
                                             style="max-width:150px; max-height:150px; display:block; border:1px solid #ccc;">
                                         <button type="button" onclick="removeImage('imgpreview')"
@@ -196,7 +199,7 @@
                                         <div class="item gitems" id="gimg{{ $index }}"
                                             data-old-image="{{ trim($img) }}"
                                             style="display:inline-block; position:relative; margin:5px;">
-                                            <img src="{{ asset('uploads/products/thumbnails/'. trim($img) )}}"
+                                            <img src="{{ asset('uploads/products/thumbnails/' . trim($img)) }}"
                                                 alt=""
                                                 style="max-width:100px; max-height:100px; display:block; border:1px solid #ccc;">
                                             <button type="button" onclick="removeGalleryImage('{{ $index }}')"
@@ -259,11 +262,12 @@
                             <fieldset class="name">
                                 <div class="body-title mb-10">Published</div>
                                 <div class="select mb-10">
-    <select name="featured">
-        <option value="0" {{ $product->featured == 0 ? 'selected' : '' }}>No</option>
-        <option value="1" {{ $product->featured == 1 ? 'selected' : '' }}>Yes</option>
-    </select>
-</div>
+                                    <select name="featured">
+                                        <option value="0" {{ $product->featured == 0 ? 'selected' : '' }}>No</option>
+                                        <option value="1" {{ $product->featured == 1 ? 'selected' : '' }}>Yes
+                                        </option>
+                                    </select>
+                                </div>
 
                             </fieldset>
 

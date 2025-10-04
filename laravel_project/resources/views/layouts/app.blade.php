@@ -468,6 +468,10 @@ use Illuminate\Support\Str;
                                                     {{ $gender }}
                                                 </a>
                                                 <ul class="collapse list-unstyled ps-3" id="{{ $genderId }}">
+                                                  <li>
+                                                            <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug($gender)]) }}"
+                                                                class="nav-link">View All</a>
+                                                    </li>
                                                     @foreach ($subCategories as $sub)
                                                         <li>
                                                             <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug($sub)]) }}"
