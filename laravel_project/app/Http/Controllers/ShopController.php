@@ -29,18 +29,18 @@ class ShopController extends Controller
             });
         }
 
-        // فلترة حسب البراند
-        if ($request->filled('brand')) {
-            $brandParam = $request->brand;
+     // فلترة حسب البراند
+    if ($request->filled('brand')) {
+        $brandParam = $request->brand;
 
-            $productsQuery->whereHas('brands', function ($q) use ($brandParam) {
-                if (is_numeric($brandParam)) {
-                    $q->where('id', $brandParam);
-                } else {
-                    $q->where('name', $brandParam);
-                }
-            });
-        }
+        $productsQuery->whereHas('brand', function ($q) use ($brandParam) {
+            if (is_numeric($brandParam)) {
+                $q->where('id', $brandParam);
+            } else {
+                $q->where('name', 'like', "%{$brandParam}%");
+            }
+        });
+    }
 
         // فلترة حسب الـ Exclusive
         if ($request->boolean('exclusive')) {

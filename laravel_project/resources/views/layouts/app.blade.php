@@ -28,6 +28,7 @@ use Illuminate\Support\Str;
       integrity="sha512-SfTiTlX6kk+qitfevl/7LibUOeJWlt9rbyDn92a1DqWOw9vWG2MFoays0sgObmWazO5BQPiFucnnEAjpAB+/Sw=="
       crossorigin="anonymous" referrerpolicy="no-referrer">
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
         .navigation__item {
             position: relative;
@@ -468,10 +469,6 @@ use Illuminate\Support\Str;
                                                     {{ $gender }}
                                                 </a>
                                                 <ul class="collapse list-unstyled ps-3" id="{{ $genderId }}">
-                                                  <li>
-                                                            <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug($gender)]) }}"
-                                                                class="nav-link">View All</a>
-                                                    </li>
                                                     @foreach ($subCategories as $sub)
                                                         <li>
                                                             <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug($sub)]) }}"
@@ -1065,12 +1062,7 @@ use Illuminate\Support\Str;
         <div id="scrollTop" class="visually-hidden end-0"></div>
         <div class="page-overlay"></div>
 
-        <script src="{{ asset('assets/js/plugins/jquery.min.js') }}">
-        document.querySelector('.btn-close-lg').addEventListener('click', function() {
-    document.querySelector('.header-mobile__navigation').classList.remove('show'); 
-});
-
-        </script>
+        <script src="{{ asset('assets/js/plugins/jquery.min.js') }}"></script>
         <script src="{{ asset('assets/js/plugins/bootstrap.bundle.min.js') }}"></script>
         <script src="{{ asset('assets/js/plugins/bootstrap-slider.min.js') }}"></script>
         <script src="{{ asset('assets/js/plugins/swiper.min.js') }}"></script>

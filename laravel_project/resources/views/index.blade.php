@@ -19,8 +19,7 @@
                 <div class="swiper-slide">
                     <div class="overflow-hidden position-relative h-100">
                         <div class="slideshow-character position-absolute bottom-0 pos_right-center">
-                            <img loading="lazy" src="{{ asset('images/home/slider1.png') }}" 
-                                alt="Woman Fashion 1"
+                            <img loading="lazy" src="{{ asset('images/home/slider1.png') }}" alt="Woman Fashion 1"
                                 class="slideshow-character__img animate animate_fade animate_btt animate_delay-9 " />
                             <div class="character_markup type2">
                                 <p
@@ -93,16 +92,16 @@
                 </div>
             </div>
 
-            <div class="container" >
-                <div 
+            <div class="container">
+                <div
                     class="slideshow-pagination slideshow-number-pagination d-flex align-items-center position-absolute bottom-0 mb-5">
                 </div>
             </div>
-        </section> 
+        </section>
 
-<section>
+        <section>
 
-</section>
+        </section>
 
         <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
         <div class="container mw-1620 bg-white border-radius-10">
@@ -149,20 +148,30 @@
                                     }
                                 }'>
                         <div class="swiper-wrapper">
-                            @foreach ($categories as $category)
-                                <div class="swiper-slide">
-                                    <a href="{{ route('shop.byCategorySlug', $category->slug) }}">
-                                        <img loading="lazy" class="w-100 h-auto mb-3"
-                                            src="{{ asset('uploads/categories/thumbnails/' . $category->image) }}"
-                                            width="124" height="124" alt="" style=" border-radius: 50%;" /></a>
-                                    <div class="text-center">
-                                        <a href="{{ route('shop.byCategorySlug', $category->slug) }}"
-                                            class="menu-link fw-medium">{{ $category->name }}</a>
-                                    </div>
-                                </div>
-                            @endforeach
+    @foreach ($categories as $category)
+        @php
+            // استخدم Regex لفصل الاسم عن الأرقام بين الأقواس
+            preg_match('/^(.*?)\s*(\(.+\))?$/', $category->name, $matches);
+            $namePart = $matches[1] ?? $category->name;
+            $numberPart = $matches[2] ?? '';
+        @endphp
 
-                        </div><!-- /.swiper-wrapper -->
+        <div class="swiper-slide">
+            <a href="{{ route('shop.byCategorySlug', $category->slug) }}">
+                <img loading="lazy" class=""
+                    src="{{ asset('uploads/categories/thumbnails/' . $category->image) }}"
+                    alt="" style=" border-radius: 50%;" />
+            </a>
+            <div class="text-center">
+                <a href="{{ route('shop.byCategorySlug', $category->slug) }}" class="menu-link fw-medium">
+                    {{ $namePart }}<br>
+                    <small>{{ $numberPart }}</small>
+                </a>
+            </div>
+        </div>
+    @endforeach
+</div><!-- /.swiper-wrapper -->
+
                     </div><!-- /.swiper-container js-swiper-slider -->
 
                     <div
@@ -183,12 +192,12 @@
             <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
 
             <section class="hot-deals container">
-                <h2 class="section-title text-center mb-3 pb-xl-3 mb-xl-4">Hot Deals</h2>
+                <h2 class="section-title text-center mb-3 pb-xl-3 mb-xl-4">Sales Collection</h2>
                 <div class="row">
                     <div
                         class="col-md-6 col-lg-4 col-xl-20per d-flex align-items-center flex-column justify-content-center py-4 align-items-md-start">
-                        <h2>Sales Collection</h2>
-                        <h2 class="fw-bold">Up to 70%</h2>
+                        <h2>Flash Sale Frenzy,</h2>
+                        <h2 class="fw-bold">Grab It Fast!</h2>
 
 
 
@@ -327,7 +336,7 @@
                                 class="circle-img" />
 
                             <div class="category-banner__item-content mt-3 p-2"
-                                style="border: 1px solid black; border-radius: 8px;">
+                                style="border: 1px solid black; border-radius: 50%;">
                                 <h3 class="mb-0">Accessories</h3>
                                 <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('Accessories')]) }}"
                                     class="btn-link text-uppercase fw-medium">
@@ -348,7 +357,7 @@
                 </div> --}}
 
                             <div class="category-banner__item-content mt-3 p-2"
-                                style="border: 1px solid black; border-radius: 8px;">
+                                style="border: 1px solid black; border-radius: 50%;">
                                 <h3 class="mb-0">Special Deals</h3>
                                 <a href="{{ route('shop.byCategorySlug', ['slug' => Str::slug('sale')]) }}"
                                     class="btn-link text-uppercase fw-medium">
@@ -465,12 +474,13 @@
                     <div class="swiper-wrapper">
                         @foreach ($brands as $brand)
                             <div class="swiper-slide">
-                                <a href="{{ route('shop.index', $brand->slug) }}">
+                                <a href="{{ route('shop.index', ['brand' => $brand->slug]) }}">
                                     <img loading="lazy" class="w-100 h-auto mb-3"
                                         src="{{ asset('uploads/brands/thumbnails/' . $brand->image) }}" width="124"
-                                        height="124" alt="" style=" border-radius: 50%;" /></a>
+                                        height="124" alt="{{ $brand->name }}" style="border-radius: 50%;" />
+                                </a>
                                 <div class="text-center">
-                                    <a href="{{ route('shop.index', $brand->slug) }}"
+                                    <a href="{{ route('shop.index', ['brand' => $brand->slug]) }}"
                                         class="menu-link fw-medium">{{ $brand->name }}</a>
                                 </div>
                             </div>
